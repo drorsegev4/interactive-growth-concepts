@@ -1,0 +1,210 @@
+@use 'tokens';
+@use 'base';
+@use 'components';
+
+.builder {
+  padding: var(--space-4);
+}
+
+.builder__title {
+  margin: 0 0 var(--space-3);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+// Team select
+.crests {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.crest-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.crest-btn:active {
+  transform: scale(0.97);
+}
+
+.crest-btn__shield {
+  width: 48px;
+  height: 56px;
+}
+
+.crest-btn__name {
+  font-weight: 700;
+  font-size: var(--fs-small);
+}
+
+// Goal / zone select
+.goal {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: var(--space-2);
+  aspect-ratio: 16 / 9;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(255, 255, 255, 0.05) 10px 11px),
+    repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, 0.05) 10px 11px),
+    var(--bg);
+  border: 3px solid var(--border);
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(51, 255, 153, 0.06);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform var(--dur-fast) var(--ease-out-expo), background var(--dur-fast), border-color var(--dur-fast);
+}
+
+.zone[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.zone:active {
+  transform: scale(0.96);
+}
+
+.zone__multiplier {
+  font-size: var(--fs-small);
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.zone-confirm {
+  margin-top: var(--space-3);
+}
+
+// Aiming — sweep track
+.sweep-wrap {
+  padding: var(--space-2) 0;
+}
+
+.sweep-track {
+  position: relative;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--border);
+  margin: var(--space-4) 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sweep-track__sweet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: rgba(51, 255, 153, 0.35);
+}
+
+.sweep-track__marker {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(0, -50%);
+  will-change: transform;
+}
+
+// Shooting — ball flight
+.shot-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 3px solid var(--border);
+  overflow: hidden;
+}
+
+.shot-stage__ball {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--white);
+  transform: translate(-50%, 0);
+  transition: transform 700ms var(--ease-out-expo), opacity 700ms;
+}
+
+.shot-stage__ball.is-flying {
+  opacity: 0;
+}
+
+// Reveal
+.reveal {
+  text-align: center;
+}
+
+.reveal__tier {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  padding: 4px var(--space-3);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--fs-small);
+  font-weight: 800;
+}
+
+.reveal__line {
+  margin: var(--space-2) 0;
+  font-size: var(--fs-sub);
+  color: var(--text-muted);
+}
+
+.reveal__odds {
+  font-size: clamp(2.2rem, 10vw, 3rem);
+  font-weight: 800;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  margin: var(--space-2) 0;
+}
+
+.skip-link {
+  display: block;
+  margin: var(--space-3) auto 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+  font-size: var(--fs-small);
+  cursor: pointer;
+}
+
+.start-over {
+  margin-top: var(--space-3);
+}
+
+.retry-btn {
+  margin-top: var(--space-3);
+}

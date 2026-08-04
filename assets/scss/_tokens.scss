@@ -1,0 +1,64 @@
+// Design tokens shared by both skins.
+
+:root {
+  // Shared neutrals
+  --white: #ffffff;
+  --focus-ring: #ffd166;
+
+  // Type scale (fluid)
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --fs-headline: clamp(1.75rem, 6vw + 0.5rem, 2.5rem);
+  --fs-sub: clamp(1rem, 2.5vw + 0.4rem, 1.15rem);
+  --fs-body: 1rem;
+  --fs-small: 0.85rem;
+
+  // Spacing
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  // Radius
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  // Easing
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quad: cubic-bezier(0.45, 0, 0.55, 1);
+
+  // Timing
+  --dur-fast: 180ms;
+  --dur-med: 320ms;
+  --dur-slow: 600ms;
+
+  // Tap target minimum
+  --tap-min: 44px;
+}
+
+// Sports skin — dark navy/charcoal, electric green accent
+[data-page="sports"] {
+  --bg: #0b1220;
+  --bg-elevated: #121b2e;
+  --surface: #182338;
+  --text: #f2f5fa;
+  --text-muted: #97a4bc;
+  --accent: #33ff99;
+  --accent-contrast: #06130c;
+  --border: #26324a;
+}
+
+// Casino skin — deep aubergine/black, warm gold accent
+[data-page="casino"] {
+  --bg: #17091d;
+  --bg-elevated: #200d29;
+  --surface: #291233;
+  --text: #f7f2fa;
+  --text-muted: #b9a4c4;
+  --accent: #e8b23c;
+  --accent-contrast: #241300;
+  --border: #3c1f47;
+}

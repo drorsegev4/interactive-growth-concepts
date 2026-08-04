@@ -1,0 +1,60 @@
+{
+  "global": {
+    "brand": "365Scores",
+    "locale": "en",
+    "currency": "€",
+    "loadingDurationMs": 1500
+  },
+  "compliance": {
+    "ageRating": "18+",
+    "termsShort": "Demo only. No real money, no real offer.",
+    "rgMessage": "Take time to think. Set your limits.",
+    "rgLabel": "BeGambleAware.org",
+    "rgUrl": "https://www.begambleaware.org"
+  },
+  "sports": {
+    "sport": "football",
+    "headlines": {
+      "A": { "headline": "Boost your odds up to ×3.5", "subheadline": "Pick your spot and take the shot." },
+      "B": { "headline": "Pick your spot. Take the shot.", "subheadline": "The tighter you aim, the bigger the boost." }
+    },
+    "fixture": {
+      "id": "fx-1",
+      "competition": "Premier League",
+      "kickoff": "2026-08-08T19:00:00Z",
+      "home": { "name": "Arsenal", "short": "ARS", "colour": "#EF0107", "onColour": "#FFFFFF" },
+      "away": { "name": "Chelsea", "short": "CHE", "colour": "#034694", "onColour": "#FFFFFF" }
+    },
+    "market": { "label": "{team} to win", "homeOdds": 2.10, "awayOdds": 3.20 },
+    "floorMultiplier": 1.4,
+    "sweepPeriodMs": 1400,
+    "zones": [
+      { "id": "tl", "label": "Top corner",    "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
+      { "id": "tc", "label": "Under the bar",  "multiplier": 2.5, "sweetZonePercent": 18, "risk": "mid"  },
+      { "id": "tr", "label": "Top corner",    "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
+      { "id": "bl", "label": "Side netting",  "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  },
+      { "id": "bc", "label": "Middle",        "multiplier": 1.4, "sweetZonePercent": 40, "risk": "low"  },
+      { "id": "br", "label": "Side netting",  "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  }
+    ],
+    "outcomeCopy": {
+      "sweet": "Top bins. Unplayable.",
+      "near": "Off the post and in!",
+      "floor": "Keeper gets a hand — rebound, tucked away."
+    },
+    "cta": { "label": "Claim your boost", "target": "#demo-complete" }
+  },
+  "casino": {
+    "headlines": {
+      "A": { "headline": "Build your welcome package", "subheadline": "Three tokens. Your call." },
+      "B": { "headline": "Your bonus, your call", "subheadline": "No spinning. You choose." }
+    },
+    "tokenCount": 3,
+    "bonusTypes": [
+      { "id": "spins", "label": "Free Spins", "unit": "spins", "perToken": 25, "blurb": "Best for slots" },
+      { "id": "match", "label": "Deposit Match", "unit": "%", "perToken": 40, "blurb": "Best for bigger bankrolls" },
+      { "id": "cashback", "label": "Cashback", "unit": "%", "perToken": 8, "blurb": "Best for playing it safe" }
+    ],
+    "bonusToken": { "label": "One on us", "count": 1 },
+    "cta": { "label": "Claim your package", "target": "#demo-complete" }
+  }
+}
