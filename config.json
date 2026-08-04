@@ -1,8 +1,7 @@
 {
+  "schemaVersion": 1,
   "global": {
     "brand": "365Scores",
-    "locale": "en",
-    "currency": "€",
     "loadingDurationMs": 1500
   },
   "compliance": {
@@ -12,29 +11,50 @@
     "rgLabel": "BeGambleAware.org",
     "rgUrl": "https://www.begambleaware.org"
   },
+  "demoNotice": {
+    "title": "This is a portfolio demo",
+    "body": "No real offer, no real money, not affiliated with any operator."
+  },
   "sports": {
     "sport": "football",
+    "ui": {
+      "loading": "Warming up…",
+      "stepTeam": "Who are you backing?",
+      "stepZone": "Pick your spot",
+      "stepAim": "Time it",
+      "aimHint": "Tap when the marker is in the bright zone.",
+      "skipShot": "Skip the shot — take the standard offer",
+      "startOver": "Start over",
+      "takeShot": "Take the shot",
+      "floorLabel": "Your offer",
+      "boostedLabel": "Your boosted offer",
+      "tokensLeft": "token left to place",
+      "errorTitle": "Couldn't load this page",
+      "errorBody": "Give it another go.",
+      "errorRetry": "Retry"
+    },
     "headlines": {
-      "A": { "headline": "Boost your odds up to ×3.5", "subheadline": "Pick your spot and take the shot." },
+      "A": { "headline": "Boost your odds up to ×{maxMultiplier}", "subheadline": "Pick your spot and take the shot." },
       "B": { "headline": "Pick your spot. Take the shot.", "subheadline": "The tighter you aim, the bigger the boost." }
     },
     "fixture": {
       "id": "fx-1",
       "competition": "Premier League",
-      "kickoff": "2026-08-08T19:00:00Z",
       "home": { "name": "Arsenal", "short": "ARS", "colour": "#EF0107", "onColour": "#FFFFFF" },
       "away": { "name": "Chelsea", "short": "CHE", "colour": "#034694", "onColour": "#FFFFFF" }
     },
     "market": { "label": "{team} to win", "homeOdds": 2.10, "awayOdds": 3.20 },
-    "floorMultiplier": 1.4,
+    "floorMultiplier": 1.2,
     "sweepPeriodMs": 1400,
+    "nearThresholdMultiple": 2.5,
+    "grid": { "cols": 3, "rows": 2 },
     "zones": [
-      { "id": "tl", "label": "Top corner",    "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
-      { "id": "tc", "label": "Under the bar",  "multiplier": 2.5, "sweetZonePercent": 18, "risk": "mid"  },
-      { "id": "tr", "label": "Top corner",    "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
-      { "id": "bl", "label": "Side netting",  "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  },
-      { "id": "bc", "label": "Middle",        "multiplier": 1.4, "sweetZonePercent": 40, "risk": "low"  },
-      { "id": "br", "label": "Side netting",  "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  }
+      { "id": "tl", "col": 1, "row": 1, "label": "Top corner",   "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
+      { "id": "tc", "col": 2, "row": 1, "label": "Under the bar","multiplier": 2.5, "sweetZonePercent": 18, "risk": "mid"  },
+      { "id": "tr", "col": 3, "row": 1, "label": "Top corner",   "multiplier": 3.5, "sweetZonePercent": 12, "risk": "high" },
+      { "id": "bl", "col": 1, "row": 2, "label": "Side netting", "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  },
+      { "id": "bc", "col": 2, "row": 2, "label": "Middle",       "multiplier": 1.6, "sweetZonePercent": 40, "risk": "low"  },
+      { "id": "br", "col": 3, "row": 2, "label": "Side netting", "multiplier": 2.0, "sweetZonePercent": 24, "risk": "mid"  }
     ],
     "outcomeCopy": {
       "sweet": "Top bins. Unplayable.",
@@ -44,17 +64,31 @@
     "cta": { "label": "Claim your boost", "target": "#demo-complete" }
   },
   "casino": {
+    "ui": {
+      "loading": "Warming up…",
+      "stepAllocate": "Build your welcome package",
+      "tokensLeftSingular": "token left to place",
+      "tokensLeftPlural": "tokens left to place",
+      "yourPackage": "Your package",
+      "packageEmpty": "Place your tokens to build your package.",
+      "lockIn": "Lock it in",
+      "startOver": "Start over",
+      "errorTitle": "Couldn't load this page",
+      "errorBody": "Give it another go.",
+      "errorRetry": "Retry"
+    },
     "headlines": {
       "A": { "headline": "Build your welcome package", "subheadline": "Three tokens. Your call." },
       "B": { "headline": "Your bonus, your call", "subheadline": "No spinning. You choose." }
     },
     "tokenCount": 3,
+    "maxTokensPerType": 3,
     "bonusTypes": [
       { "id": "spins", "label": "Free Spins", "unit": "spins", "perToken": 25, "blurb": "Best for slots" },
       { "id": "match", "label": "Deposit Match", "unit": "%", "perToken": 40, "blurb": "Best for bigger bankrolls" },
       { "id": "cashback", "label": "Cashback", "unit": "%", "perToken": 8, "blurb": "Best for playing it safe" }
     ],
-    "bonusToken": { "label": "One on us", "count": 1 },
+    "bonusToken": { "label": "One on us", "count": 1, "revealCopy": "We rounded it up." },
     "cta": { "label": "Claim your package", "target": "#demo-complete" }
   }
 }

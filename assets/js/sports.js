@@ -1,4 +1,4 @@
-import { loadConfig, resetConfig, readyAfterLatency, lock, track } from './core.js';
+import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate } from './core.js';
 
 const STORAGE_KEY = 'outcome_sports';
 const els = {};
@@ -20,15 +20,18 @@ function cacheEls() {
   els.module = $('module');
   els.spinnerLayer = $('spinner-layer');
   els.builder = $('builder');
-  els.progress = null;
   els.liveRegion = $('live-region');
   els.rgFooter = $('rg-footer');
+}
+
+function maxMultiplier() {
+  return Math.max(...sports.zones.map((z) => z.multiplier));
 }
 
 function renderHero() {
   const meta = window.__entainVariantMeta || { variant: 'A', source: 'random' };
   const copy = sports.headlines[meta.variant] || sports.headlines.A;
-  els.headline.textContent = copy.headline;
+  els.headline.textContent = interpolate(copy.headline, { maxMultiplier: maxMultiplier() });
   els.subheadline.textContent = copy.subheadline;
 }
 
@@ -38,6 +41,11 @@ function renderRgFooter() {
     <p>${c.termsShort}</p>
     <p>${c.rgMessage} <a href="${c.rgUrl}" rel="noopener noreferrer" target="_blank">${c.rgLabel}</a></p>
   `;
+}
+
+function demoNoticeHtml() {
+  const n = cfg.demoNotice;
+  return `<p class="demo-notice" id="demo-complete"><strong>${n.title}.</strong> ${n.body}</p>`;
 }
 
 function announce(message) {
@@ -97,9 +105,10 @@ function renderTeamSelect() {
 
   const home = sports.fixture.home;
   const away = sports.fixture.away;
+  const ui = sports.ui;
 
   els.builder.innerHTML = `
-    <h2 class="builder__title">Who are you backing?</h2>
+    <h2 class="builder__title">${ui.stepTeam}</h2>
     <div class="crests">
       <button class="crest-btn" type="button" data-action="pick-team" data-team-id="home" style="border-color:${home.colour}">
         ${shieldSvg(home.colour, home.onColour)}
@@ -114,15 +123,17 @@ function renderTeamSelect() {
 }
 
 // ---- Step: zone select ----
-function renderZoneSelect(reselectedFrom) {
+function renderZoneSelect() {
   state.step = 'zone';
   const team = teamOf(state.teamId);
+  const ui = sports.ui;
   document.documentElement.style.setProperty('--accent', team.colour);
 
   const zonesHtml = sports.zones
     .map(
       (zone) => `
       <button class="zone" type="button" data-action="pick-zone" data-zone-id="${zone.id}"
+        style="grid-column:${zone.col};grid-row:${zone.row}"
         aria-pressed="${zone.id === state.zoneId}">
         ${zone.label}<span class="zone__multiplier">×${zone.multiplier}</span>
       </button>`
@@ -130,9 +141,9 @@ function renderZoneSelect(reselectedFrom) {
     .join('');
 
   els.builder.innerHTML = `
-    <h2 class="builder__title">Pick your spot.</h2>
-    <div class="goal" role="group" aria-label="Goal zones">${zonesHtml}</div>
-    <button class="cta zone-confirm" type="button" data-action="confirm-zone" ${state.zoneId ? '' : 'disabled aria-disabled="true"'}>Take the shot</button>
+    <h2 class="builder__title">${ui.stepZone}</h2>
+    <div class="goal" role="group" aria-label="Goal zones" style="--cols:${sports.grid.cols};--rows:${sports.grid.rows}">${zonesHtml}</div>
+    <button class="cta zone-confirm" type="button" data-action="confirm-zone" ${state.zoneId ? '' : 'disabled aria-disabled="true"'}>${ui.takeShot}</button>
   `;
 
   announce(`${team.name} selected. Pick your spot in the goal.`);
@@ -157,21 +168,22 @@ function handleZonePick(btn) {
 function renderAiming() {
   state.step = 'aim';
   const zone = sports.zones.find((z) => z.id === state.zoneId);
+  const ui = sports.ui;
   track('zone_selected', { zone_id: zone.id, multiplier: zone.multiplier, risk: zone.risk });
 
   const half = zone.sweetZonePercent / 2;
   const sweetLeft = 50 - half;
 
   els.builder.innerHTML = `
-    <h2 class="builder__title">Time it.</h2>
-    <p class="reveal__line">Tap when the marker is in the bright zone.</p>
+    <h2 class="builder__title">${ui.stepAim}</h2>
+    <p class="reveal__line">${ui.aimHint}</p>
     <div class="sweep-wrap">
       <div class="sweep-track" data-action="stop-sweep" role="button" tabindex="0" aria-label="Tap to time your shot">
         <div class="sweep-track__sweet" style="left:${sweetLeft}%;width:${zone.sweetZonePercent}%"></div>
         <div class="sweep-track__marker" id="marker"></div>
       </div>
     </div>
-    <button class="skip-link" type="button" data-action="skip-shot">Skip the shot — take the standard offer.</button>
+    <button class="skip-link" type="button" data-action="skip-shot">${ui.skipShot}</button>
   `;
 
   const period = prefersReducedMotion ? sports.sweepPeriodMs * 1.3 : sports.sweepPeriodMs;
@@ -230,14 +242,15 @@ function computeGrade(zone) {
   const half = zone.sweetZonePercent / 2;
   const delta = Math.abs(position - 50);
   const floor = sports.floorMultiplier;
+  const nearThreshold = half * sports.nearThresholdMultiple;
 
   let tier, multiplier;
   if (delta <= half) {
     tier = 'sweet';
     multiplier = zone.multiplier;
-  } else if (delta <= half * 2.5) {
+  } else if (delta <= nearThreshold) {
     tier = 'near';
-    const t = 1 - (delta - half) / (half * 1.5);
+    const t = 1 - (delta - half) / (nearThreshold - half);
     multiplier = floor + (zone.multiplier - floor) * t;
   } else {
     tier = 'floor';
@@ -264,13 +277,11 @@ function stopSweep() {
 function renderShooting(zone, grade) {
   state.step = 'shoot';
 
-  const cellIndex = { tl: 0, tc: 1, tr: 2, bl: 3, bc: 4, br: 5 };
-  const idx = cellIndex[zone.id] ?? 4;
-  const col = idx % 3;
-  const row = Math.floor(idx / 3);
+  const cols = sports.grid.cols;
+  const rows = sports.grid.rows;
   const jitter = (grade.position - 50) * 0.15;
-  const landX = 16.6 + col * 33.3 + jitter;
-  const landY = 30 + row * 40;
+  const landX = ((zone.col - 0.5) / cols) * 100 + jitter;
+  const landY = ((zone.row - 0.5) / rows) * 100;
 
   els.builder.innerHTML = `
     <div class="shot-stage" aria-hidden="true">
@@ -293,20 +304,24 @@ function renderShooting(zone, grade) {
 function renderReveal(zone, grade, restored = false) {
   state.step = 'reveal';
   const team = teamOf(state.teamId);
+  const ui = sports.ui;
   document.documentElement.style.setProperty('--accent', team.colour);
   const baseOdds = oddsOf(state.teamId);
   const boostedOdds = Math.round(baseOdds * grade.multiplier * 100) / 100;
-  const marketLabel = sports.market.label.replace('{team}', team.name);
+  const marketLabel = interpolate(sports.market.label, { team: team.name });
   const copy = sports.outcomeCopy[grade.tier] || '';
   const upliftOverFloor = Math.round((grade.multiplier - sports.floorMultiplier) * 100) / 100;
+  const oddsLabel = grade.tier === 'floor' ? ui.floorLabel : ui.boostedLabel;
 
   els.builder.innerHTML = `
     <div class="reveal">
       <span class="reveal__tier">${copy}</span>
       <p class="reveal__line">${marketLabel}, ${baseOdds.toFixed(2)} &rarr;</p>
+      <p class="reveal__odds-label">${oddsLabel}</p>
       <div class="reveal__odds" id="reveal-odds">${baseOdds.toFixed(2)}</div>
       <a class="cta" id="cta" href="${sports.cta.target}">${sports.cta.label}</a>
-      <button class="secondary-btn start-over" type="button" data-action="start-over">Start over</button>
+      <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
+      ${demoNoticeHtml()}
     </div>
   `;
 
@@ -363,10 +378,15 @@ function startOver() {
 function renderError(reason) {
   state.step = 'error';
   track('config_error', { reason });
+  const ui = (sports && sports.ui) || {
+    errorTitle: "Couldn't load this page",
+    errorBody: 'Give it another go.',
+    errorRetry: 'Retry',
+  };
   els.builder.innerHTML = `
     <div class="reveal">
-      <p class="reveal__line">We couldn't load this page right now.</p>
-      <button class="cta retry-btn" type="button" data-action="retry">Try again</button>
+      <p class="reveal__line"><strong>${ui.errorTitle}.</strong> ${ui.errorBody}</p>
+      <button class="cta retry-btn" type="button" data-action="retry">${ui.errorRetry}</button>
     </div>
   `;
   els.spinnerLayer.remove();

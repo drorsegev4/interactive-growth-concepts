@@ -72,3 +72,8 @@ export function track(eventName, props = {}) {
   window.dataLayer.push(event);
   console.debug(`[track] ${eventName}`, props);
 }
+
+// Copy tokens: {team}, {maxMultiplier}, {multiplier}, {odds}, {boostedOdds} — see README.
+export function interpolate(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
+}

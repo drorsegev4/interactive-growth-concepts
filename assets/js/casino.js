@@ -36,6 +36,11 @@ function renderRgFooter() {
   `;
 }
 
+function demoNoticeHtml() {
+  const n = cfg.demoNotice;
+  return `<p class="demo-notice" id="demo-complete"><strong>${n.title}.</strong> ${n.body}</p>`;
+}
+
 function announce(message) {
   els.liveRegion.textContent = message;
 }
@@ -90,7 +95,7 @@ function packageRowsHtml(allocation, bonusCategoryId) {
       </div>`;
     })
     .join('');
-  return rows || '<p class="package__empty">Place your tokens to build your package.</p>';
+  return rows || `<p class="package__empty">${casino.ui.packageEmpty}</p>`;
 }
 
 // ---- Step: allocate ----
@@ -98,15 +103,18 @@ function renderAllocate() {
   state.step = 'allocate';
   document.documentElement.style.removeProperty('--accent');
 
+  const ui = casino.ui;
   const remaining = casino.tokenCount - totalPlaced(state.allocation);
+  const tokensLeftLabel = remaining === 1 ? ui.tokensLeftSingular : ui.tokensLeftPlural;
 
   const categoriesHtml = casino.bonusTypes
     .map((type) => {
       const count = state.allocation[type.id] || 0;
       const pips = Array.from({ length: count })
-        .map((_, i) => `<button class="pip is-filled" type="button" data-action="remove-token" data-type-id="${type.id}" aria-label="Remove token from ${type.label}"></button>`)
+        .map(() => `<button class="pip is-filled" type="button" data-action="remove-token" data-type-id="${type.id}" aria-label="Remove token from ${type.label}"></button>`)
         .join('');
-      const disabled = remaining <= 0;
+      const atCategoryMax = count >= casino.maxTokensPerType;
+      const disabled = remaining <= 0 || atCategoryMax;
       return `
       <div class="category-row">
         <button class="category" type="button" data-action="add-token" data-type-id="${type.id}" ${disabled ? 'disabled aria-disabled="true"' : ''}>
@@ -114,7 +122,7 @@ function renderAllocate() {
             <span class="category__label">${type.label}</span>
             <span class="category__blurb">${type.blurb}</span>
           </span>
-          <span class="category__count">${count}/${casino.tokenCount}</span>
+          <span class="category__count">${count}/${casino.maxTokensPerType}</span>
         </button>
         ${count > 0 ? `<div class="category__pips">${pips}</div>` : ''}
       </div>`;
@@ -122,21 +130,22 @@ function renderAllocate() {
     .join('');
 
   els.builder.innerHTML = `
-    <h2 class="builder__title">Build your welcome package</h2>
-    <p class="token-bank">${remaining} token${remaining === 1 ? '' : 's'} left to place</p>
+    <h2 class="builder__title">${ui.stepAllocate}</h2>
+    <p class="token-bank">${remaining} ${tokensLeftLabel}</p>
     <div class="categories">${categoriesHtml}</div>
     <div class="package">
-      <p class="package__title">Your package</p>
+      <p class="package__title">${ui.yourPackage}</p>
       <div id="package-rows">${packageRowsHtml(state.allocation)}</div>
     </div>
-    <button class="cta lock-in" type="button" data-action="lock-in" ${remaining > 0 ? 'disabled aria-disabled="true"' : ''}>Lock it in</button>
+    <button class="cta lock-in" type="button" data-action="lock-in" ${remaining > 0 ? 'disabled aria-disabled="true"' : ''}>${ui.lockIn}</button>
   `;
 }
 
 function handleAddToken(typeId) {
   const remaining = casino.tokenCount - totalPlaced(state.allocation);
-  if (remaining <= 0) return;
-  state.allocation[typeId] = (state.allocation[typeId] || 0) + 1;
+  const current = state.allocation[typeId] || 0;
+  if (remaining <= 0 || current >= casino.maxTokensPerType) return;
+  state.allocation[typeId] = current + 1;
   track('token_placed', { bonus_type_id: typeId, count_in_category: state.allocation[typeId] });
   renderAllocate();
   announce(`Token placed on ${typeId}.`);
@@ -179,16 +188,19 @@ function lockIn() {
 
 function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
   state.step = 'reveal';
+  const ui = casino.ui;
 
   els.builder.innerHTML = `
     <div class="reveal">
       <span class="reveal__tag">${casino.bonusToken.label}</span>
+      <p class="reveal__reveal-copy">${casino.bonusToken.revealCopy}</p>
       <div class="package is-boosted" id="package-card">
-        <p class="package__title">Your package</p>
+        <p class="package__title">${ui.yourPackage}</p>
         <div id="package-rows">${packageRowsHtml(finalAllocation, bonusCategoryId)}</div>
       </div>
       <a class="cta" id="cta" href="${casino.cta.target}">${casino.cta.label}</a>
-      <button class="secondary-btn start-over" type="button" data-action="start-over">Start over</button>
+      <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
+      ${demoNoticeHtml()}
     </div>
   `;
 
@@ -237,10 +249,15 @@ function startOver() {
 function renderError(reason) {
   state.step = 'error';
   track('config_error', { reason });
+  const ui = (casino && casino.ui) || {
+    errorTitle: "Couldn't load this page",
+    errorBody: 'Give it another go.',
+    errorRetry: 'Retry',
+  };
   els.builder.innerHTML = `
     <div class="reveal">
-      <p class="package__empty">We couldn't load this page right now.</p>
-      <button class="cta retry-btn" type="button" data-action="retry">Try again</button>
+      <p class="package__empty"><strong>${ui.errorTitle}.</strong> ${ui.errorBody}</p>
+      <button class="cta retry-btn" type="button" data-action="retry">${ui.errorRetry}</button>
     </div>
   `;
   els.spinnerLayer.remove();
