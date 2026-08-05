@@ -66,6 +66,12 @@ for (const zone of config.sports.zones) {
 assert.equal(config.casino.maxTokensPerType, 3, 'casino per-category cap must be explicit');
 assert.ok(config.casino.bonusToken?.label && config.casino.bonusToken?.count && config.casino.bonusToken?.revealCopy, 'surprise token must be fully configured');
 
+for (const cssPath of ['./assets/css/sports.css', './assets/css/casino.css']) {
+  const css = read(cssPath);
+  assert.match(css, /\.spinner-layer\[hidden\]\{display:none\}/, `${cssPath} must dismiss the loading overlay`);
+  assert.doesNotMatch(css, /\.spinner \.spinner-layer\[hidden\]/, `${cssPath} hidden rule must not be nested under the spinner`);
+}
+
 const sportsJs = read('./assets/js/sports.js');
 assert.match(sportsJs, /sports\.nearThresholdMultiple/, 'grading must consume nearThresholdMultiple');
 assert.match(sportsJs, /sports\.grid\.cols/, 'sports rendering must consume config grid columns');
