@@ -1,4 +1,5 @@
 node_modules/
 lh-*.json
 server.log
+server-error.log
 dist/
