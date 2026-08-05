@@ -2,8 +2,8 @@
 
 Two mobile-first, interactive pre-landers for a first-time paid-acquisition visitor: **Sports** ("Take the Shot") and **Casino** ("Build Your Bonus"). Zero runtime dependencies — pure HTML, SASS-compiled CSS, vanilla ES modules. `sass` is a devDependency build tool only; nothing from `node_modules` reaches the browser.
 
-**Live demo:** _add Vercel/Pages URL here_
-**Repo:** _add GitHub URL here_
+**Live demo:** https://drorsegev4.github.io/entain-growth-assignment/
+**Repo:** https://github.com/drorsegev4/entain-growth-assignment
 
 ## Try both variants
 
