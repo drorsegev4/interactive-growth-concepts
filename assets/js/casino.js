@@ -1,4 +1,4 @@
-import { loadConfig, resetConfig, readyAfterLatency, lock, track } from './core.js';
+import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate } from './core.js';
 
 const STORAGE_KEY = 'outcome_casino';
 const els = {};
@@ -13,6 +13,11 @@ function $(id) {
 
 function cacheEls() {
   els.headline = $('headline');
+  els.brand = $('brand');
+  els.ageBadge = $('age-badge');
+  els.eyebrow = $('eyebrow');
+  els.loadingLabel = $('loading-label');
+  els.backLink = document.querySelector('.back-link');
   els.subheadline = $('subheadline');
   els.module = $('module');
   els.spinnerLayer = $('spinner-layer');
@@ -21,8 +26,16 @@ function cacheEls() {
   els.rgFooter = $('rg-footer');
 }
 
+function renderShell() {
+  els.brand.textContent = cfg.global.brand;
+  els.ageBadge.textContent = cfg.compliance.ageRating;
+  els.backLink.textContent = `\u2190 ${cfg.global.backLabel}`;
+  els.loadingLabel.textContent = casino.ui.loading;
+  els.eyebrow.textContent = casino.ui.experienceLabel;
+}
 function renderHero() {
   const meta = window.__entainVariantMeta || { variant: 'A', source: 'random' };
+
   const copy = casino.headlines[meta.variant] || casino.headlines.A;
   els.headline.textContent = copy.headline;
   els.subheadline.textContent = copy.subheadline;
@@ -54,6 +67,8 @@ function withLock(durationMs, fn) {
   fn();
   setTimeout(() => {
     els.builder.removeAttribute('inert');
+    const focusTarget = els.builder.querySelector('[data-focus-on-unlock]');
+    if (focusTarget) focusTarget.focus();
     lock.release();
   }, durationMs);
   return true;
@@ -90,7 +105,7 @@ function packageRowsHtml(allocation, bonusCategoryId) {
     .map((type) => {
       const isBonus = type.id === bonusCategoryId;
       return `<div class="package__row${isBonus ? ' package__row--bonus' : ''}">
-        <span>${type.label}${isBonus ? ' +bonus' : ''}</span>
+        <span>${type.label}${isBonus ? ` +${casino.ui.bonusSuffix}` : ''}</span>
         <span data-value-for="${type.id}">${formatValue(type, allocation[type.id])}</span>
       </div>`;
     })
@@ -111,7 +126,7 @@ function renderAllocate() {
     .map((type) => {
       const count = state.allocation[type.id] || 0;
       const pips = Array.from({ length: count })
-        .map(() => `<button class="pip is-filled" type="button" data-action="remove-token" data-type-id="${type.id}" aria-label="Remove token from ${type.label}"></button>`)
+        .map(() => `<button class="pip is-filled" type="button" data-action="remove-token" data-type-id="${type.id}" aria-label="${interpolate(ui.removeTokenLabel, { type: type.label })}"></button>`)
         .join('');
       const atCategoryMax = count >= casino.maxTokensPerType;
       const disabled = remaining <= 0 || atCategoryMax;
@@ -148,7 +163,8 @@ function handleAddToken(typeId) {
   state.allocation[typeId] = current + 1;
   track('token_placed', { bonus_type_id: typeId, count_in_category: state.allocation[typeId] });
   renderAllocate();
-  announce(`Token placed on ${typeId}.`);
+  const type = casino.bonusTypes.find((item) => item.id === typeId);
+  announce(interpolate(casino.ui.tokenPlacedAnnouncement, { type: type.label }));
 }
 
 function handleRemoveToken(typeId) {
@@ -204,7 +220,7 @@ function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
     </div>
   `;
 
-  announce(`Package locked. ${casino.bonusToken.label} applied.`);
+  announce(interpolate(ui.packageLockedAnnouncement, { bonus: casino.bonusToken.label }));
 
   if (!restored) {
     track('outcome_revealed', { final_allocation: finalAllocation, bonus_category: bonusCategoryId });
@@ -217,8 +233,7 @@ function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
   persist({ allocation: state.allocation, finalAllocation, bonusCategoryId, revealedAt: Date.now() });
 
   const revealEl = els.builder.querySelector('.reveal');
-  revealEl.setAttribute('tabindex', '-1');
-  revealEl.focus();
+  revealEl.setAttribute('tabindex', '-1'); revealEl.setAttribute('data-focus-on-unlock', '');
 }
 
 function persist(outcome) {
@@ -260,7 +275,7 @@ function renderError(reason) {
       <button class="cta retry-btn" type="button" data-action="retry">${ui.errorRetry}</button>
     </div>
   `;
-  els.spinnerLayer.remove();
+  els.spinnerLayer.hidden = true;
   els.builder.hidden = false;
   els.module.removeAttribute('aria-busy');
 }
@@ -328,6 +343,7 @@ async function boot() {
   renderHero();
   renderRgFooter();
 
+  renderShell();
   await latencyPromise;
 
   let restored = restoreOutcome();
@@ -346,7 +362,7 @@ async function boot() {
     renderAllocate();
   }
 
-  els.spinnerLayer.remove();
+  els.spinnerLayer.hidden = true;
   els.module.removeAttribute('aria-busy');
   track('landing_viewed', { concept: 'casino', variant: (window.__entainVariantMeta || {}).variant, floor_multiplier: null });
 }

@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "global": {
     "brand": "365Scores",
-    "loadingDurationMs": 1500
+    "loadingDurationMs": 1500,
+    "backLabel": "Explore both concepts"
   },
   "compliance": {
     "ageRating": "18+",
@@ -18,6 +19,7 @@
   "sports": {
     "sport": "football",
     "ui": {
+      "competitionLabel": "{competition} - interactive odds boost",
       "loading": "Warming up…",
       "stepTeam": "Who are you backing?",
       "stepZone": "Pick your spot",
@@ -28,10 +30,13 @@
       "takeShot": "Take the shot",
       "floorLabel": "Your offer",
       "boostedLabel": "Your boosted offer",
-      "tokensLeft": "token left to place",
       "errorTitle": "Couldn't load this page",
       "errorBody": "Give it another go.",
-      "errorRetry": "Retry"
+      "errorRetry": "Retry",
+      "goalAriaLabel": "Choose a goal zone",
+      "teamSelectedAnnouncement": "{team} selected. Pick your spot in the goal.",
+      "outcomeAnnouncement": "{outcome} Boosted odds {odds}.",
+      "timingAriaLabel": "Stop the moving marker in the highlighted zone"
     },
     "headlines": {
       "A": { "headline": "Boost your odds up to ×{maxMultiplier}", "subheadline": "Pick your spot and take the shot." },
@@ -65,6 +70,7 @@
   },
   "casino": {
     "ui": {
+      "experienceLabel": "Personalised welcome offer",
       "loading": "Warming up…",
       "stepAllocate": "Build your welcome package",
       "tokensLeftSingular": "token left to place",
@@ -75,7 +81,11 @@
       "startOver": "Start over",
       "errorTitle": "Couldn't load this page",
       "errorBody": "Give it another go.",
-      "errorRetry": "Retry"
+      "errorRetry": "Retry",
+      "bonusSuffix": "bonus",
+      "removeTokenLabel": "Remove token from {type}",
+      "tokenPlacedAnnouncement": "Token placed on {type}.",
+      "packageLockedAnnouncement": "Package locked. {bonus} applied."
     },
     "headlines": {
       "A": { "headline": "Build your welcome package", "subheadline": "Three tokens. Your call." },

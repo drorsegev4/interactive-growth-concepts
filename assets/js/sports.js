@@ -16,6 +16,11 @@ function $(id) {
 
 function cacheEls() {
   els.headline = $('headline');
+  els.brand = $('brand');
+  els.ageBadge = $('age-badge');
+  els.eyebrow = $('eyebrow');
+  els.loadingLabel = $('loading-label');
+  els.backLink = document.querySelector('.back-link');
   els.subheadline = $('subheadline');
   els.module = $('module');
   els.spinnerLayer = $('spinner-layer');
@@ -28,8 +33,16 @@ function maxMultiplier() {
   return Math.max(...sports.zones.map((z) => z.multiplier));
 }
 
+function renderShell() {
+  els.brand.textContent = cfg.global.brand;
+  els.ageBadge.textContent = cfg.compliance.ageRating;
+  els.backLink.textContent = `\u2190 ${cfg.global.backLabel}`;
+  els.loadingLabel.textContent = sports.ui.loading;
+  els.eyebrow.textContent = interpolate(sports.ui.competitionLabel, { competition: sports.fixture.competition });
+}
 function renderHero() {
   const meta = window.__entainVariantMeta || { variant: 'A', source: 'random' };
+
   const copy = sports.headlines[meta.variant] || sports.headlines.A;
   els.headline.textContent = interpolate(copy.headline, { maxMultiplier: maxMultiplier() });
   els.subheadline.textContent = copy.subheadline;
@@ -61,6 +74,8 @@ function withLock(durationMs, fn) {
   fn();
   setTimeout(() => {
     els.builder.removeAttribute('inert');
+    const focusTarget = els.builder.querySelector('[data-focus-on-unlock]');
+    if (focusTarget) focusTarget.focus();
     lock.release();
   }, durationMs);
   return true;
@@ -128,6 +143,7 @@ function renderZoneSelect() {
   const team = teamOf(state.teamId);
   const ui = sports.ui;
   document.documentElement.style.setProperty('--accent', team.colour);
+  document.documentElement.style.setProperty('--accent-contrast', team.onColour);
 
   const zonesHtml = sports.zones
     .map(
@@ -142,11 +158,11 @@ function renderZoneSelect() {
 
   els.builder.innerHTML = `
     <h2 class="builder__title">${ui.stepZone}</h2>
-    <div class="goal" role="group" aria-label="Goal zones" style="--cols:${sports.grid.cols};--rows:${sports.grid.rows}">${zonesHtml}</div>
+    <div class="goal" role="group" aria-label="${ui.goalAriaLabel}" style="--cols:${sports.grid.cols};--rows:${sports.grid.rows}">${zonesHtml}</div>
     <button class="cta zone-confirm" type="button" data-action="confirm-zone" ${state.zoneId ? '' : 'disabled aria-disabled="true"'}>${ui.takeShot}</button>
   `;
 
-  announce(`${team.name} selected. Pick your spot in the goal.`);
+  announce(interpolate(ui.teamSelectedAnnouncement, { team: team.name }));
 }
 
 function handleZonePick(btn) {
@@ -178,7 +194,7 @@ function renderAiming() {
     <h2 class="builder__title">${ui.stepAim}</h2>
     <p class="reveal__line">${ui.aimHint}</p>
     <div class="sweep-wrap">
-      <div class="sweep-track" data-action="stop-sweep" role="button" tabindex="0" aria-label="Tap to time your shot">
+      <div class="sweep-track" data-action="stop-sweep" role="button" tabindex="0" aria-label="${ui.timingAriaLabel}">
         <div class="sweep-track__sweet" style="left:${sweetLeft}%;width:${zone.sweetZonePercent}%"></div>
         <div class="sweep-track__marker" id="marker"></div>
       </div>
@@ -293,8 +309,13 @@ function renderShooting(zone, grade) {
   const duration = prefersReducedMotion ? 50 : 700;
 
   requestAnimationFrame(() => {
-    ball.style.transition = `transform ${duration}ms var(--ease-out-expo), opacity ${duration}ms`;
-    ball.style.transform = `translate(calc(${landX}% - 50%), calc(${landY}% * -1))`;
+    const stage = ball.parentElement.getBoundingClientRect();
+    const startX = stage.width / 2;
+    const startY = stage.height * 0.94 - ball.offsetHeight / 2;
+    const deltaX = (landX / 100) * stage.width - startX;
+    const deltaY = (landY / 100) * stage.height - startY;
+    ball.style.transition = `transform ${duration}ms var(--ease-out-expo)`;
+    ball.style.transform = `translate(calc(-50% + ${deltaX}px), ${deltaY}px)`;
   });
 
   setTimeout(() => renderReveal(zone, grade), duration + 150);
@@ -309,6 +330,7 @@ function renderReveal(zone, grade, restored = false) {
   const baseOdds = oddsOf(state.teamId);
   const boostedOdds = Math.round(baseOdds * grade.multiplier * 100) / 100;
   const marketLabel = interpolate(sports.market.label, { team: team.name });
+  document.documentElement.style.setProperty('--accent-contrast', team.onColour);
   const copy = sports.outcomeCopy[grade.tier] || '';
   const upliftOverFloor = Math.round((grade.multiplier - sports.floorMultiplier) * 100) / 100;
   const oddsLabel = grade.tier === 'floor' ? ui.floorLabel : ui.boostedLabel;
@@ -326,7 +348,7 @@ function renderReveal(zone, grade, restored = false) {
   `;
 
   countUp($('reveal-odds'), baseOdds, boostedOdds, restored ? 0 : 600);
-  announce(`${copy} Boosted odds ${boostedOdds.toFixed(2)}.`);
+  announce(interpolate(ui.outcomeAnnouncement, { outcome: copy, odds: boostedOdds.toFixed(2) }));
 
   if (!restored) {
     track('outcome_revealed', { final_multiplier: grade.multiplier, uplift_over_floor: upliftOverFloor, boosted_odds: boostedOdds });
@@ -339,8 +361,7 @@ function renderReveal(zone, grade, restored = false) {
   persist({ teamId: state.teamId, zoneId: zone.id, grade, revealedAt: Date.now() });
 
   const revealEl = els.builder.querySelector('.reveal');
-  revealEl.setAttribute('tabindex', '-1');
-  revealEl.focus();
+  revealEl.setAttribute('tabindex', '-1'); revealEl.setAttribute('data-focus-on-unlock', '');
 }
 
 function skipShot() {
@@ -389,7 +410,7 @@ function renderError(reason) {
       <button class="cta retry-btn" type="button" data-action="retry">${ui.errorRetry}</button>
     </div>
   `;
-  els.spinnerLayer.remove();
+  els.spinnerLayer.hidden = true;
   els.builder.hidden = false;
   els.module.removeAttribute('aria-busy');
 }
@@ -455,7 +476,8 @@ function onBuilderKeydown(event) {
   const target = event.target.closest('[data-action="stop-sweep"]');
   if (!target) return;
   event.preventDefault();
-  target.click();
+  if (state.step !== 'aim') return;
+  withLock(700 + 150 + 600, stopSweep);
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -488,6 +510,7 @@ async function boot() {
 
   renderHero();
   renderRgFooter();
+  renderShell();
 
   await latencyPromise;
 
@@ -507,7 +530,7 @@ async function boot() {
     renderTeamSelect();
   }
 
-  els.spinnerLayer.remove();
+  els.spinnerLayer.hidden = true;
   els.module.removeAttribute('aria-busy');
   track('landing_viewed', { concept: 'sports', variant: (window.__entainVariantMeta || {}).variant, floor_multiplier: sports.floorMultiplier });
 }

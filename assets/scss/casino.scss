@@ -191,3 +191,23 @@
   color: var(--text-muted);
   text-align: left;
 }
+
+.category {
+  position: relative;
+  overflow: hidden;
+}
+
+.category::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0.45;
+}
+
+@media (hover: hover) {
+  .category:not(:disabled):hover {
+    border-color: var(--accent);
+  }
+}

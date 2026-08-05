@@ -14,7 +14,10 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   font-size: var(--fs-body);
-  background: var(--bg);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 90% 0, var(--glow) 0, transparent 34rem),
+    var(--bg);
   color: var(--text);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;

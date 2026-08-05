@@ -227,3 +227,27 @@
 .retry-btn {
   margin-top: var(--space-3);
 }
+
+.shot-stage {
+  background:
+    linear-gradient(180deg, rgba(51, 255, 153, 0.06), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 15px, rgba(255, 255, 255, 0.045) 15px 16px),
+    repeating-linear-gradient(90deg, transparent 0 15px, rgba(255, 255, 255, 0.045) 15px 16px),
+    var(--bg);
+}
+
+.shot-stage__ball {
+  background:
+    radial-gradient(circle at 50% 12%, #111 0 2px, transparent 2.5px),
+    radial-gradient(circle at 20% 57%, #111 0 2px, transparent 2.5px),
+    radial-gradient(circle at 80% 57%, #111 0 2px, transparent 2.5px),
+    #fff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+@media (hover: hover) {
+  .crest-btn:hover,
+  .zone:hover {
+    border-color: var(--accent);
+  }
+}

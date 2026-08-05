@@ -177,3 +177,53 @@
   font-size: var(--fs-small);
   text-decoration: none;
 }
+
+.brand {
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+}
+
+.brand::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent);
+}
+
+.hero__eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.module {
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.back-link {
+  padding: var(--space-2) 0;
+}
+
+@media (hover: hover) {
+  .cta:not(:disabled):hover {
+    filter: brightness(1.06);
+  }
+
+  .secondary-btn:hover,
+  .back-link:hover {
+    color: var(--text);
+  }
+}
+
+@media (min-width: 700px) {
+  .page {
+    padding-top: var(--space-6);
+  }
+}
