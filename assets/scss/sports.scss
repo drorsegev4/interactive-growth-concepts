@@ -12,92 +12,6 @@
   font-weight: 700;
 }
 
-// Team select
-.crests {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.crest-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-2);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.crest-btn:active {
-  transform: scale(0.97);
-}
-
-.crest-btn__shield {
-  width: 48px;
-  height: 56px;
-}
-
-.crest-btn__name {
-  font-weight: 700;
-  font-size: var(--fs-small);
-}
-
-// Goal / zone select
-.goal {
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 3), 1fr);
-  grid-template-rows: repeat(var(--rows, 2), 1fr);
-  gap: var(--space-2);
-  aspect-ratio: 16 / 9;
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  background:
-    repeating-linear-gradient(0deg, transparent 0 10px, rgba(255, 255, 255, 0.05) 10px 11px),
-    repeating-linear-gradient(90deg, transparent 0 10px, rgba(255, 255, 255, 0.05) 10px 11px),
-    var(--bg);
-  border: 3px solid var(--border);
-}
-
-.zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-height: 44px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: rgba(51, 255, 153, 0.06);
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 700;
-  transition: transform var(--dur-fast) var(--ease-out-expo), background var(--dur-fast), border-color var(--dur-fast);
-}
-
-.zone[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  border-color: var(--accent);
-}
-
-.zone:active {
-  transform: scale(0.96);
-}
-
-.zone__multiplier {
-  font-size: var(--fs-small);
-  font-weight: 400;
-  opacity: 0.85;
-}
-
-.zone-confirm {
-  margin-top: var(--space-3);
-}
-
 // Aiming — sweep track
 .sweep-wrap {
   padding: var(--space-2) 0;
@@ -245,9 +159,56 @@
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
 }
 
-@media (hover: hover) {
-  .crest-btn:hover,
-  .zone:hover {
-    border-color: var(--accent);
-  }
+.fixture-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.fixture-card__competition {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fixture-card__teams {
+  font-size: 1.05rem;
+}
+
+.fixture-card__market {
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+}
+
+.fixture-card__up-to {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: center;
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.sweep-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.sweep-labels strong {
+  color: var(--accent);
+}
+
+.fixture-card + .builder__title {
+  margin-bottom: var(--space-1);
 }

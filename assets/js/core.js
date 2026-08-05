@@ -20,34 +20,54 @@ export function resetConfig() {
   configPromise = null;
 }
 
-export function getVariant() {
+export function getVariant(headlines, experimentId) {
+  const catalog = headlines || {};
+  const variants = Object.keys(catalog);
+  const fallback = variants[0] || 'A';
+  const storageKey = 'exp_headline_' + experimentId;
   const params = new URLSearchParams(window.location.search);
-  const fromUrl = params.get('variant');
+  const fromUrl = params.get('variant')?.toUpperCase();
+  const isConfigured = (candidate) => Boolean(candidate && Object.hasOwn(catalog, candidate));
+  const readStored = () => {
+    try {
+      return window.localStorage.getItem(storageKey);
+    } catch {
+      return null;
+    }
+  };
+  const store = (value) => {
+    try {
+      window.localStorage.setItem(storageKey, value);
+    } catch {
+      // Experiment assignment still works when storage is unavailable.
+    }
+  };
   let variant;
   let source;
 
-  if (fromUrl && /^[ab]$/i.test(fromUrl)) {
-    variant = fromUrl.toUpperCase();
+  if (isConfigured(fromUrl)) {
+    variant = fromUrl;
     source = 'url';
-    localStorage.setItem('exp_headline', variant);
+    store(variant);
   } else if (fromUrl) {
-    // Unsupported value (e.g. ?variant=C) — silent fallback to A, not tracked as an error.
-    variant = 'A';
+    variant = fallback;
     source = 'fallback';
   } else {
-    const stored = localStorage.getItem('exp_headline');
-    if (stored === 'A' || stored === 'B') {
+    const stored = readStored();
+    if (isConfigured(stored)) {
       variant = stored;
       source = 'storage';
     } else {
-      variant = Math.random() < 0.5 ? 'A' : 'B';
+      variant = variants[Math.floor(Math.random() * variants.length)] || fallback;
       source = 'random';
-      localStorage.setItem('exp_headline', variant);
+      store(variant);
     }
   }
 
   document.documentElement.dataset.variant = variant;
-  return { variant, source };
+  const meta = { variant, source };
+  window.__entainVariantMeta = meta;
+  return meta;
 }
 
 export function readyAfterLatency(ms = 1500) {

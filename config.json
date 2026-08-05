@@ -21,26 +21,26 @@
     "ui": {
       "competitionLabel": "{competition} - interactive odds boost",
       "loading": "Warming up…",
-      "stepTeam": "Who are you backing?",
-      "stepZone": "Pick your spot",
-      "stepAim": "Time it",
+      "stepAim": "Take the shot",
       "aimHint": "Tap when the marker is in the bright zone.",
       "skipShot": "Skip the shot — take the standard offer",
       "startOver": "Start over",
-      "takeShot": "Take the shot",
       "floorLabel": "Your offer",
       "boostedLabel": "Your boosted offer",
       "errorTitle": "Couldn't load this page",
+      "fixtureSeparator": "vs",
+      "upToLabel": "Up to \u00d7{maxMultiplier}",
+      "floorMarkerLabel": "\u00d7{floorMultiplier} floor",
+      "maxMarkerLabel": "\u00d7{maxMultiplier} max",
       "errorBody": "Give it another go.",
       "errorRetry": "Retry",
-      "goalAriaLabel": "Choose a goal zone",
-      "teamSelectedAnnouncement": "{team} selected. Pick your spot in the goal.",
       "outcomeAnnouncement": "{outcome} Boosted odds {odds}.",
+      "handoffCopy": "In production, your boosted odds of {boostedOdds} carry through to the operator's betslip or account flow.",
       "timingAriaLabel": "Stop the moving marker in the highlighted zone"
     },
     "headlines": {
-      "A": { "headline": "Boost your odds up to ×{maxMultiplier}", "subheadline": "Pick your spot and take the shot." },
-      "B": { "headline": "Pick your spot. Take the shot.", "subheadline": "The tighter you aim, the bigger the boost." }
+      "A": { "headline": "Boost your odds up to ×{maxMultiplier}", "subheadline": "One tap. Time it right." },
+      "B": { "headline": "Time it. Take the shot.", "subheadline": "Stop the marker in the bright zone for the biggest boost." }
     },
     "fixture": {
       "id": "fx-1",
@@ -49,6 +49,8 @@
       "away": { "name": "Chelsea", "short": "CHE", "colour": "#034694", "onColour": "#FFFFFF" }
     },
     "market": { "label": "{team} to win", "homeOdds": 2.10, "awayOdds": 3.20 },
+    "featuredTeamId": "home",
+    "featuredZoneId": "tl",
     "floorMultiplier": 1.2,
     "sweepPeriodMs": 1400,
     "nearThresholdMultiple": 2.5,
@@ -85,7 +87,8 @@
       "bonusSuffix": "bonus",
       "removeTokenLabel": "Remove token from {type}",
       "tokenPlacedAnnouncement": "Token placed on {type}.",
-      "packageLockedAnnouncement": "Package locked. {bonus} applied."
+      "packageLockedAnnouncement": "Package locked. {bonus} applied.",
+      "handoffCopy": "In production, your personalised package carries through to the operator's account flow."
     },
     "headlines": {
       "A": { "headline": "Build your welcome package", "subheadline": "Three tokens. Your call." },

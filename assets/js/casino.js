@@ -1,4 +1,4 @@
-import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate } from './core.js';
+import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate, getVariant } from './core.js';
 
 const STORAGE_KEY = 'outcome_casino';
 const els = {};
@@ -33,8 +33,7 @@ function renderShell() {
   els.loadingLabel.textContent = casino.ui.loading;
   els.eyebrow.textContent = casino.ui.experienceLabel;
 }
-function renderHero() {
-  const meta = window.__entainVariantMeta || { variant: 'A', source: 'random' };
+function renderHero(meta) {
 
   const copy = casino.headlines[meta.variant] || casino.headlines.A;
   els.headline.textContent = copy.headline;
@@ -214,6 +213,7 @@ function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
         <p class="package__title">${ui.yourPackage}</p>
         <div id="package-rows">${packageRowsHtml(finalAllocation, bonusCategoryId)}</div>
       </div>
+      <p class="reveal__handoff">${ui.handoffCopy}</p>
       <a class="cta" id="cta" href="${casino.cta.target}">${casino.cta.label}</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
       ${demoNoticeHtml()}
@@ -339,8 +339,9 @@ async function boot() {
     return;
   }
   casino = cfg.casino;
+  const variantMeta = getVariant(casino.headlines, 'casino');
 
-  renderHero();
+  renderHero(variantMeta);
   renderRgFooter();
 
   renderShell();
@@ -364,7 +365,7 @@ async function boot() {
 
   els.spinnerLayer.hidden = true;
   els.module.removeAttribute('aria-busy');
-  track('landing_viewed', { concept: 'casino', variant: (window.__entainVariantMeta || {}).variant, floor_multiplier: null });
+  track('landing_viewed', { concept: 'casino', variant: variantMeta.variant, floor_multiplier: null });
 }
 
 function init() {

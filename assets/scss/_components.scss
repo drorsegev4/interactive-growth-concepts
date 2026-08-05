@@ -155,6 +155,12 @@
   cursor: pointer;
 }
 
+.reveal__handoff {
+  margin: var(--space-3) 0;
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+}
+
 // Responsible gambling footer
 .rg-footer {
   content-visibility: auto;

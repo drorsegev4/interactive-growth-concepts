@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
+import { getVariant } from './assets/js/core.js';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const config = JSON.parse(read('./config.json'));
@@ -11,20 +11,21 @@ assert.ok(config.demoNotice?.title && config.demoNotice?.body, 'portfolio demo n
 
 const sportsUiKeys = [
   'loading',
-  'stepTeam',
-  'stepZone',
   'stepAim',
   'aimHint',
   'skipShot',
   'startOver',
-  'takeShot',
   'floorLabel',
   'boostedLabel',
+  'fixtureSeparator',
+  'upToLabel',
+  'floorMarkerLabel',
+  'maxMarkerLabel',
   'errorTitle',
   'errorBody',
   'errorRetry',
-  'goalAriaLabel',
   'timingAriaLabel',
+  'handoffCopy',
 ];
 
 const casinoUiKeys = [
@@ -40,6 +41,7 @@ const casinoUiKeys = [
   'errorBody',
   'errorRetry',
   'removeTokenLabel',
+  'handoffCopy',
 ];
 
 for (const key of sportsUiKeys) assert.ok(config.sports.ui[key], `sports.ui.${key} is required`);
@@ -49,9 +51,12 @@ assert.match(config.sports.headlines.A.headline, /\{maxMultiplier\}/, 'headline 
 assert.equal(config.sports.floorMultiplier, 1.2, 'sports floor must remain 1.2');
 assert.ok(
   config.sports.zones.every((zone) => zone.multiplier > config.sports.floorMultiplier),
-  'every selectable zone must beat the guaranteed floor'
+  'every configured zone must beat the guaranteed floor'
 );
 assert.ok(config.sports.nearThresholdMultiple > 1, 'near threshold must be a configurable multiplier');
+assert.ok(['home', 'away'].includes(config.sports.featuredTeamId), 'featured team must reference the configured fixture');
+assert.ok(config.sports.zones.some((zone) => zone.id === config.sports.featuredZoneId), 'featured zone must exist');
+
 
 const { cols, rows } = config.sports.grid;
 assert.ok(Number.isInteger(cols) && cols > 0 && Number.isInteger(rows) && rows > 0, 'grid dimensions must be positive integers');
@@ -77,31 +82,32 @@ assert.match(sportsJs, /sports\.nearThresholdMultiple/, 'grading must consume ne
 assert.match(sportsJs, /sports\.grid\.cols/, 'sports rendering must consume config grid columns');
 assert.match(sportsJs, /sports\.grid\.rows/, 'sports rendering must consume config grid rows');
 
-function evaluateVariant(htmlPath, query, stored) {
-  const html = read(htmlPath);
-  const source = html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
-  assert.ok(source, `${htmlPath} must contain the early variant assignment`);
-  const values = new Map(stored ? [['exp_headline', stored]] : []);
-  const sandbox = {
+assert.doesNotMatch(sportsJs, /data-action="pick-(team|zone)"/, 'sports must remain a one-action game');
+assert.match(sportsJs, /renderAiming\(\)/, 'sports must open directly on the timing mechanic');
+function evaluateVariant(headlines, experimentId, query, stored) {
+  const storageKey = 'exp_headline_' + experimentId;
+  const values = new Map(stored ? [[storageKey, stored]] : []);
+  globalThis.window = {
     location: { search: query },
     localStorage: {
       getItem: (key) => values.get(key) ?? null,
       setItem: (key, value) => values.set(key, value),
     },
-    document: { documentElement: { dataset: {} } },
-    window: {},
-    URLSearchParams,
-    Math,
   };
-  vm.runInNewContext(source, sandbox);
-  return sandbox.window.__entainVariantMeta;
+  globalThis.document = { documentElement: { dataset: {} } };
+  return { meta: getVariant(headlines, experimentId), values };
 }
 
-for (const page of ['./sports/index.html', './casino/index.html']) {
-  assert.deepEqual({ ...evaluateVariant(page, '?variant=A') }, { variant: 'A', source: 'url' });
-  assert.deepEqual({ ...evaluateVariant(page, '?variant=b') }, { variant: 'B', source: 'url' });
-  assert.deepEqual({ ...evaluateVariant(page, '?variant=C') }, { variant: 'A', source: 'fallback' });
-  assert.deepEqual({ ...evaluateVariant(page, '', 'B') }, { variant: 'B', source: 'storage' });
+for (const [experimentId, headlines] of [['sports', config.sports.headlines], ['casino', config.casino.headlines]]) {
+  assert.deepEqual(evaluateVariant(headlines, experimentId, '?variant=A').meta, { variant: 'A', source: 'url' });
+  assert.deepEqual(evaluateVariant(headlines, experimentId, '?variant=b').meta, { variant: 'B', source: 'url' });
+  assert.deepEqual(evaluateVariant(headlines, experimentId, '?variant=C').meta, { variant: 'A', source: 'fallback' });
+  assert.deepEqual(evaluateVariant(headlines, experimentId, '', 'B').meta, { variant: 'B', source: 'storage' });
 }
 
+const extensibleHeadlines = { ...config.sports.headlines, C: { headline: 'Question', subheadline: 'Test' } };
+assert.deepEqual(evaluateVariant(extensibleHeadlines, 'sports', '?variant=C').meta, { variant: 'C', source: 'url' });
+const namespaced = evaluateVariant(config.sports.headlines, 'sports', '?variant=B');
+assert.equal(namespaced.values.get('exp_headline_sports'), 'B');
+assert.equal(namespaced.values.has('exp_headline_casino'), false);
 console.log('Verified config schema, offer ladder, dynamic geometry, UI copy, and A/B routing.');
