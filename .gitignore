@@ -3,3 +3,7 @@ lh-*.json
 server.log
 server-error.log
 dist/
+
+.vercel/
+.env.local
+.env.*.local
