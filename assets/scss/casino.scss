@@ -205,49 +205,6 @@
   font-weight: var(--fw-black);
 }
 
-// Tells the user how short this is. Pre-landers leak people who cannot tell
-// whether they are one step from the offer or eight.
-.step-rail {
-  margin-top: var(--space-5);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.step-rail__item {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--track-snug);
-}
-
-.step-rail__item span {
-  display: grid;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  font-size: 0.6rem;
-}
-
-.step-rail__item.is-active {
-  color: var(--accent);
-}
-
-.step-rail__item.is-active span {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent), transparent 82%);
-}
-
 // Claim screen: the reveal and the CTA are the same frame, so the format cards
 // sit between the won amount and the button rather than in front of the offer.
 .claim__title {

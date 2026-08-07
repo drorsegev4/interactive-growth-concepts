@@ -20,16 +20,11 @@ const sportsUiKeys = [
 ];
 
 const casinoUiKeys = [
-  'loading', 'stepSpinKicker', 'stepClaimKicker', 'stepSpin', 'spinHint', 'floorNote', 'stepSpinning',
+  'loading', 'stepSpin', 'spinHint', 'floorNote', 'stepSpinning',
   'spinButton', 'spinAriaLabel', 'startOver', 'errorTitle', 'errorBody', 'errorRetry',
   'spinningAnnouncement', 'wonLabel', 'unitSuffix', 'claimTitle', 'claimHint', 'outcomeAnnouncement',
   'formatAnnouncement', 'chooseToClaim', 'rewardEyebrow', 'handoffCopy',
 ];
-
-assert.ok(
-  Array.isArray(config.casino.ui.steps) && config.casino.ui.steps.length >= 2,
-  'the step rail must be a configured list of at least two steps'
-);
 
 // The floor must be promised before the spin, not revealed after it.
 assert.match(config.casino.ui.spinHint, /\{floor\}/, 'the spin hint must state the guaranteed floor');
@@ -271,7 +266,6 @@ assert.match(casinoJs, /function formatReward/, 'one win must convert into every
 // The chosen format has to reach the handoff, otherwise the extra tap buys
 // nothing and cost per FTD cannot be split by format.
 assert.match(casinoJs, /format_id: state\.formatId/, 'the chosen format must be carried into the CTA event');
-assert.match(casinoJs, /function stepRailHtml/, 'the flow length must be visible up front');
 
 /* ------------------------------------------------------------- experiments */
 

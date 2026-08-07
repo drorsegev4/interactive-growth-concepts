@@ -78,12 +78,9 @@
     "ui": {
       "experienceLabel": "Welcome offer",
       "loading": "Loading your wheel…",
-      "stepSpinKicker": "1 · Spin",
-      "stepClaimKicker": "2 · Take it your way",
       "stepSpin": "Spin for your welcome bonus",
       "spinHint": "{floor} {unit} guaranteed. Spin to see how much more.",
       "floorNote": "You cannot land below {floor} {unit}.",
-      "steps": ["Spin", "Choose", "Claim"],
       "stepSpinning": "Good luck…",
       "spinButton": "Spin the wheel",
       "spinAriaLabel": "Spin the welcome bonus wheel",

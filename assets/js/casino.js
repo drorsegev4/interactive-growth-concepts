@@ -166,19 +166,6 @@ function wheelHtml({ rotation = 0, spinning = false } = {}) {
   `;
 }
 
-function stepRailHtml(activeIndex) {
-  return `
-    <ol class="step-rail">
-      ${casino.ui.steps
-        .map(
-          (label, index) =>
-            `<li class="step-rail__item${index === activeIndex ? ' is-active' : ''}"><span>${index + 1}</span>${label}</li>`
-        )
-        .join('')}
-    </ol>
-  `;
-}
-
 function renderSpin() {
   state.step = 'spin';
   const ui = casino.ui;
@@ -186,15 +173,11 @@ function renderSpin() {
 
   els.builder.innerHTML = `
     <div class="frame">
-      <div class="wheel-flow__intro">
-        <p class="step-kicker">${ui.stepSpinKicker}</p>
-        <h2 class="builder__title">${ui.stepSpin}</h2>
-      </div>
+      <h2 class="builder__title">${ui.stepSpin}</h2>
       <p class="wheel-flow__floor">${interpolate(ui.spinHint, { floor: floorPrize().value, unit })}</p>
       ${wheelHtml()}
       <button class="cta spin-cta" type="button" data-action="spin-wheel"
         data-focus-on-unlock>${ui.spinButton}</button>
-      ${stepRailHtml(0)}
     </div>
   `;
 }
@@ -267,7 +250,6 @@ function renderClaim(prize, restored = false) {
 
   els.builder.innerHTML = `
     <div class="frame reveal">
-      <p class="step-kicker">${ui.stepClaimKicker}</p>
       <p class="reveal__label">${ui.wonLabel}</p>
       <p class="reveal__value">${interpolate(ui.unitSuffix, { value: prize.value, unit })}</p>
       <h2 class="builder__title claim__title">${ui.claimTitle}</h2>
@@ -285,7 +267,6 @@ function renderClaim(prize, restored = false) {
           format ? interpolate(casino.cta.label, { format: format.label }) : ui.chooseToClaim
         }</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
-      ${stepRailHtml(format ? 2 : 1)}
       ${demoNoticeHtml()}
     </div>
   `;
