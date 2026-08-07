@@ -1,90 +1,90 @@
 # Interactive Growth Concepts
 
-Two mobile-first pre-landing concepts for paid acquisition: an interactive football odds boost and a casino reward wheel with a post-reveal choice. Both experiences are designed to turn a passive offer into one quick moment of participation before the operator handoff.
+Two mobile-first interactive pre-landers for paid acquisition — one Sports, one Casino — built with plain HTML, SCSS and vanilla JavaScript.
 
-This is a portfolio prototype. It uses no real money, creates no real betting offer and is not affiliated with a gaming operator.
+Portfolio prototype: no real money, no real offer, not affiliated with any operator.
 
 ## Live demo
 
-**[Open the experience](https://interactive-growth-concepts.vercel.app)**
+**[interactive-growth-concepts.vercel.app](https://interactive-growth-concepts.vercel.app)**
 
-| Concept | Interaction | A/B test links |
+| Concept | Interaction | Variants |
 | --- | --- | --- |
-| **Sports — Take the Shot** | Stop the moving marker to reveal a protected odds boost. | [Variant A](https://interactive-growth-concepts.vercel.app/sports/?variant=A) · [Variant B](https://interactive-growth-concepts.vercel.app/sports/?variant=B) |
-| **Casino — Spin, Then Choose** | Reveal a bonus value, then choose how to take it. | [Variant A](https://interactive-growth-concepts.vercel.app/casino/?variant=A) · [Variant B](https://interactive-growth-concepts.vercel.app/casino/?variant=B) |
+| **Sports — Take the Shot** | Time a shot on goal to boost the odds on a featured market. | [A](https://interactive-growth-concepts.vercel.app/sports?variant=A) · [B](https://interactive-growth-concepts.vercel.app/sports?variant=B) |
+| **Casino — Spin, Then Choose** | Spin for a bonus value, then choose the format it pays out in. | [A](https://interactive-growth-concepts.vercel.app/casino?variant=A) · [B](https://interactive-growth-concepts.vercel.app/casino?variant=B) |
 
 ## Strategy & Competitors
 
-### Research approach
+### What I looked at
 
-I assessed the category through a user-acquisition lens: ad-to-page continuity, speed to value, interaction cost, clarity of the offer, trust signals and the handoff into registration. The benchmark set included bet365, FanDuel, DraftKings, Paddy Power, Sky Bet, 888 and Stake, alongside current iGaming pre-landing research such as [AffRoom's betting landing-page review](https://affroom.com/blog/betting-pre-landing-and-landing-pages/).
+Reviewed 5 August 2026, via live product surfaces and Meta Ad Library creatives:
 
-The recurring market patterns were prominent welcome offers, sports-event relevance, short calls to action and familiar gamified reveals. Those patterns are effective, but they create two opportunities: turn the offer into a product-relevant interaction and give the user meaningful control over the revealed value.
+- **bet365 — Bet Builder.** Combine markets from one fixture and watch the price recalculate as selections change. Genuine utility, but it assumes betting literacy and sits deep in the wagering journey, well past acquisition.
+- **DraftKings — Sportsbook.** Same Game Parlays, Pools, Free-to-Play Pools and daily Odds Boosts. A varied set of participation hooks, but the acquisition page still explains them as cards and copy rather than letting you try one.
+- **BetMGM — Casino.** Conventional welcome bundles alongside chance-led mechanics including a wheel and an arcade claw machine. Its welcome-bonus guide also shows deposit match, free spins and bonus credit as the recurring building blocks users are expected to compare unaided.
+- **DraftKings — Meta ads.** Creatives promising "Play $5, get 1000 Flex Spins" link straight to `itunes.apple.com`. A cold user is asked to install a native app before seeing or touching anything the ad promised.
 
-| Market pattern | Conversion opportunity | Prototype response |
+Most acquisition creative in the category is video. Almost none of it is playable.
+
+### The gap
+
+What operators ship falls into two camps, and nothing I found does both at once:
+
+| Camp | Strength | Limitation |
 | --- | --- | --- |
-| Fixed welcome offer | Participation can create more involvement than passive reading. | Sports turns the offer into one tap-and-stop interaction. |
-| Generic spin-to-win wheel | Randomness creates anticipation, but a fixed prize format may not suit the user. | Casino reveals one value, then lets the user take it as Free Spins, Deposit Match or Cashback. |
-| Large headline plus immediate CTA | Fast, but gives cold traffic little reason to engage. | Each concept earns the CTA through a short interaction without adding a registration form. |
-| Campaign-specific teams, odds and prizes | Relevance is useful but hardcoded pages are slow to reuse. | All campaign details and offer values come from one local `config.json`. |
-| Compliance pushed to the footer | Trust can arrive too late in the journey. | 18+, responsible-gambling copy and the portfolio disclaimer remain visible without competing with the main action. |
+| **Utility-first customisation** — bet builders, same-game parlays | Real control, immediate price feedback | Built for users who already understand markets |
+| **Chance-led acquisition** — wheels, prize machines | Fast, legible reveal | The user's input rarely changes the offer in any explainable way |
 
-### Why these concepts
+Both concepts here sit in that gap: acquisition gamification with real utility underneath.
 
-**Sports — Take the Shot** connects the interaction to the product context. Instead of placing a game beside an unrelated promotion, the user takes a football shot to reveal an odds boost on the featured match. The outcome is bounded by configured minimum and maximum values, rapid repeat input is blocked, and the revealed result survives refresh.
+The DraftKings ad funnel is the sharpest version of the problem. It puts a ~150MB app install between the promise and the payoff. A mobile-web pre-lander lets a cold user *do* the thing the ad advertised, in the browser, before being asked for anything.
 
-**Casino — Spin, Then Choose** separates anticipation from preference. The wheel first reveals a bonus value, then the user chooses whether to take the equivalent reward as Free Spins, Deposit Match or Cashback. This improves on a generic prize wheel by preserving the familiar reveal while giving the user control at the moment of claim.
+### What I built, and why it improves on that
 
-Both flows deliberately stop at a clear operator handoff. They demonstrate the acquisition idea without imitating a real registration or collecting personal data.
+**Sports — Take the Shot.** Instead of a static "boosted odds!" banner, the visitor times a shot on goal. The floor offer is visible before they play: this is upside-only, there is no losing state. The timing is real — tighter zones pay more, exactly as longer odds pay more in the market underneath. The visitor isn't reading an explanation of risk and reward, they're performing it with their thumb, and the resolved line (`Arsenal to win, 2.10 → 7.35`) shows how a boost actually applies to real odds, which a flat multiplier banner never does.
 
-## Technical implementation
+**Casino — Spin, Then Choose.** The wheel resolves a genuinely uncertain value; the visitor then decides whether to take it as Free Spins, Deposit Match or Cashback. This answers the second camp's weakness directly — the input *does* change the offer — while keeping the reveal that makes a wheel worth watching. Asking for the preference *after* the win also matters: at the top of a pre-lander "Deposit Match" versus "Cashback" is operator jargon aimed at a stranger, but once the value is won, the same three options become three concrete numbers and the choice reads as spending winnings rather than filling in a form.
 
-- Pure HTML, modern SCSS/CSS and Vanilla JavaScript; no runtime libraries or animation engines.
-- Copy, teams, markets, prizes, wheel segments, timing and interaction geometry are loaded from `config.json`.
-- A real configuration request runs alongside an exact 1.5-second simulated loading state.
-- `?variant=A` and `?variant=B` force headline variants; normal assignments persist separately for each concept.
-- Interaction locks prevent double-clicks and duplicate outcomes during animations.
-- Revealed outcomes persist in `sessionStorage`; **Start over** clears the state intentionally.
-- Funnel events are pushed to `window.dataLayer` for later analytics integration.
-- Semantic controls, keyboard focus management, live-region announcements, visible focus states, 44 px touch targets and reduced-motion support improve accessibility.
-- SCSS is compiled and inlined at build time to remove a render-blocking stylesheet request. Manrope is self-hosted with `font-display: swap`.
+The chosen format is carried into the handoff, so the preference is a real payload rather than decoration — and a zero-party signal about where a user sits on the slots ↔ bankroll ↔ risk-averse spectrum.
 
-## Run locally
+### Measurement
 
-Requirements: Node.js 18 or newer.
+Funnel events push to `window.dataLayer`. Two earn their place: **`uplift_over_floor`** (Sports) decides whether the game deserved to exist — did players land meaningfully above the guaranteed floor, and does that correlate with CTA clicks? If not, the mechanic is decoration. **`format_selected`** (Casino) captures preference at the moment of ownership, which a spin outcome alone never could.
 
-```sh
-npm install
-npm run check
-```
+The number that matters downstream is cost per FTD, not CTR. Pre-landers reliably lift click-through and can still dilute registration quality.
 
-Serve the repository root with any static server, then open:
+### Compliance as a design constraint
 
-- `/sports/?variant=A`
-- `/casino/?variant=A`
-
-`npm run check` builds the deployment into `dist/client` and validates the configuration schema, dynamic offer constraints, interaction geometry, state rules and experiment routing.
-
-## Validation
-
-The test log and manual QA matrix are documented in [TESTING.md](TESTING.md). Automated verification covers the highest-risk contracts, including the exact loading delay, configuration-driven offers, reward bounds, wheel state, duplicate-input protection and A/B routing.
-
-The latest recorded Lighthouse runs scored:
-
-| Page | Performance | Accessibility | Best Practices | SEO |
-| --- | ---: | ---: | ---: | ---: |
-| Casino | 99 | 100 | 100 | 100 |
-| Sports | 99 | 96 | 100 | 100 |
-
-The remaining Sports contrast finding and final narrow-viewport pass are tracked in the QA log rather than presented as completed.
+Neither page links to a real operator. Copy uses *unlock*, *claim* and *boost* — never *win*, *guaranteed* or *risk-free*. Every prize is a bonus offer, never a cash amount. The guaranteed floor is stated before the spin, and the top prize is deliberately the least likely outcome rather than implied as typical. Both pages carry a persistent 18+ badge, a BeGambleAware link and the portfolio disclaimer.
 
 ## Next Steps
 
-With an additional week, I would prioritize:
+With another week, in priority order:
 
-1. **Measure the full funnel:** connect `dataLayer` events to an analytics endpoint and compare interaction completion, CTA click-through and downstream registration by concept and headline variant.
-2. **Preserve campaign continuity:** add campaign-specific creative themes and pass the selected team, chosen bonus format and revealed outcome into the operator registration handoff.
-3. **Test mechanics, not only copy:** experiment with a static-offer control, wheel-first versus preference-first Casino flows, and different Sports difficulty curves.
-4. **Strengthen production resilience:** validate remote configuration, add timeout and retry telemetry, apply content-security headers and introduce end-to-end browser tests.
-5. **Complete accessibility and performance hardening:** resolve the remaining Sports contrast issue, test representative assistive technology and devices, and set Lighthouse budgets in CI.
-6. **Add responsible personalisation:** localise sports, currency and compliant offer language by market without using sensitive behavioural targeting.
+1. **Real A/B instrumentation.** The experiment is wired correctly — sticky assignment, four testable URLs, variant recorded with its source — but nothing collects it. Pointing `dataLayer` at GA4, Segment or a small custom collector is the highest-leverage next step; without it every hypothesis here is untestable in practice.
+2. **The shootout, not the single shot.** One shot was a deliberate call to fit a short attention budget. Three markets, three timed shots, odds compounding as they land maps directly onto how an accumulator works — but it is more commitment, so it belongs after the single-shot mechanic proves it converts.
+3. **Server-side config and an admin surface.** `config.json` is already the single source of truth for every string, price and probability. The next step is a CMS-backed editor so marketing can ship new fixtures, zones or prize ladders without a pull request.
+4. **Session replay on the timing mechanic.** The riskiest part of the build for UX legibility: does a first-time visitor understand *why* they got a near miss rather than a perfect hit? Replay or a post-shot micro-survey answers that quickly.
+5. **Real-device performance validation.** Lighthouse CI budgets, then a mid-tier Android device on a throttled connection. Simulated throttling and real hardware diverge, and this is mobile-first.
+6. **Localisation.** Locale bundles once a second market exists, including market-specific compliance and number formatting. Unused locale and currency keys are deliberately absent from today's schema rather than stubbed.
+
+## Running locally
+
+Requires Node 18+.
+
+```sh
+npm install
+npm run check     # builds dist/client and runs the contract tests
+```
+
+Then serve the repo root and open `/sports` or `/casino`.
+
+`npm run check` verifies the things most likely to break silently: the exact 1.5s delay, config-driven copy, the non-dominated zone ladder, wheel prize reachability and entropy, team-colour contrast against the dark palette, token parity between the two skins, and all four A/B routing cases.
+
+### Implementation notes
+
+- **No libraries** — no framework, no animation engine. SCSS inlines at build time so nothing blocks render; Manrope is self-hosted and subset, metric-matched so the swap costs no layout shift.
+- **The 1.5s delay never gates LCP.** Fetch and timer run concurrently; the hero paints as soon as config resolves and only the interactive module waits.
+- **Abuse prevention** — a module-level lock guards every transition, handlers no-op off-step, `inert` freezes the container mid-animation, and `event.isTrusted` rejects synthetic events.
+- **Geometry is config, not code.** `grid.cols`/`rows` and each zone's `col`/`row` drive the layout and the ball's landing point. `sweetZonePercent` is load-bearing: a marketer retunes the whole risk curve without touching JavaScript.
+- **Reduced motion slows the sweep 30% rather than removing it** — the sweep *is* the mechanic; deleting it would break the page, not make it accessible.
