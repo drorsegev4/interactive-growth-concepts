@@ -78,7 +78,7 @@
     "ui": {
       "experienceLabel": "Welcome offer",
       "loading": "Loading your wheel…",
-      "stepSpin": "Spin for your welcome bonus",
+      "stepSpin": "Your welcome bonus",
       "spinHint": "{floor} {unit} guaranteed. Spin to see how much more.",
       "floorNote": "You cannot land below {floor} {unit}.",
       "stepSpinning": "Good luck…",
