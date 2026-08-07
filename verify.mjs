@@ -189,6 +189,15 @@ for (const page of ['sports', 'casino']) {
   assert.match(css, /manrope-latin-var\.woff2/, `${page}.css must reference the local font file`);
   assert.match(css, /size-adjust/, `${page}.css must metric-match the fallback so the swap costs no layout shift`);
 
+  // Every hero line is written by JS after config resolves. Without reserved
+  // space the hero paints empty, then pushes the module and footer down when the
+  // copy lands. That regression measured 0.116-0.139 CLS in production.
+  for (const selector of ['hero__headline', 'hero__sub', 'hero__eyebrow']) {
+    const rule = css.match(new RegExp(`\\.${selector}\\{[^}]*\\}`));
+    assert.ok(rule, `${page}.css must style .${selector}`);
+    assert.match(rule[0], /min-height/, `.${selector} must reserve space before its config-driven copy arrives`);
+  }
+
   // Guards the class of bug that left --surface-bright referenced but never
   // declared, silently killing the casino hover state.
   const declared = new Set([...css.matchAll(/--([\w-]+)\s*:/g)].map((match) => match[1]));

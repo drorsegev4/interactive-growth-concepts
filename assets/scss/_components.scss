@@ -62,11 +62,21 @@
 }
 
 // Hero
+//
+// Every line in here is written by JS once config.json resolves, so at first
+// paint these elements are empty. Without reserved space the hero collapses to
+// its padding and then shoves the module and footer down when the copy lands —
+// a ~130px shift that measured 0.116-0.139 CLS, most of the page's total.
+//
+// The reservations are in em so they track the fluid type scale instead of
+// being a fixed pixel guess, and they hold two lines of headline and two of
+// subheadline, which covers the longest configured variant at 320px.
 .hero {
   padding: var(--space-3) 0 var(--space-5);
 }
 
 .hero__eyebrow {
+  min-height: 1.5em;
   margin: 0 0 var(--space-2);
   color: var(--accent);
   font-size: var(--fs-micro);
@@ -76,6 +86,7 @@
 }
 
 .hero__headline {
+  min-height: calc(2 * var(--leading-tight) * 1em);
   margin: 0 0 var(--space-2);
   font-size: var(--fs-headline);
   font-weight: var(--headline-weight);
@@ -85,6 +96,7 @@
 }
 
 .hero__sub {
+  min-height: calc(2 * var(--leading-snug) * 1em);
   margin: 0;
   color: var(--text-muted);
   font-size: var(--fs-sub);
