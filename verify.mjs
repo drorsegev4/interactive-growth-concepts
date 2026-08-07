@@ -30,17 +30,23 @@ const sportsUiKeys = [
 
 const casinoUiKeys = [
   'loading',
-  'stepAllocate',
-  'tokensLeftSingular',
-  'tokensLeftPlural',
-  'yourPackage',
-  'packageEmpty',
-  'lockIn',
+  'stepChoose',
+  'chooseHint',
+  'selectedLabel',
+  'stepSpin',
+  'stepSpinning',
+  'spinHint',
+  'spinButton',
+  'spinAriaLabel',
   'startOver',
   'errorTitle',
   'errorBody',
   'errorRetry',
-  'removeTokenLabel',
+  'preferenceAnnouncement',
+  'spinningAnnouncement',
+  'outcomeAnnouncement',
+  'rewardEyebrow',
+  'matchedLabel',
   'handoffCopy',
 ];
 
@@ -68,8 +74,30 @@ for (const zone of config.sports.zones) {
   occupied.add(cell);
 }
 
-assert.equal(config.casino.maxTokensPerType, 3, 'casino per-category cap must be explicit');
-assert.ok(config.casino.bonusToken?.label && config.casino.bonusToken?.count && config.casino.bonusToken?.revealCopy, 'surprise token must be fully configured');
+assert.ok(config.casino.bonusTypes.length >= 3, 'casino must offer at least three preference types');
+const bonusTypeIds = new Set();
+for (const type of config.casino.bonusTypes) {
+  assert.ok(type.id && type.label && type.mark && type.blurb && type.color, 'each casino preference must be fully configured');
+  assert.ok(!bonusTypeIds.has(type.id), `casino preference ${type.id} must be unique`);
+  bonusTypeIds.add(type.id);
+}
+
+assert.ok(config.casino.wheel.spinDurationMs >= 1000, 'casino spin must provide a legible reveal moment');
+assert.ok(Number.isInteger(config.casino.wheel.turns) && config.casino.wheel.turns >= 3, 'casino wheel turns must be a positive configured integer');
+assert.ok(config.casino.wheel.segments.length >= bonusTypeIds.size * 2, 'casino wheel must show multiple outcomes per preference');
+const segmentIds = new Set();
+const segmentsByType = new Map([...bonusTypeIds].map((id) => [id, 0]));
+for (const segment of config.casino.wheel.segments) {
+  assert.ok(segment.id && segment.label && segment.color, 'each casino wheel segment must be fully configured');
+  assert.ok(!segmentIds.has(segment.id), `casino wheel segment ${segment.id} must be unique`);
+  assert.ok(bonusTypeIds.has(segment.typeId), `${segment.id} must reference a configured preference`);
+  assert.ok(Number.isFinite(segment.value) && segment.value > 0, `${segment.id} must have a positive value`);
+  segmentIds.add(segment.id);
+  segmentsByType.set(segment.typeId, segmentsByType.get(segment.typeId) + 1);
+}
+for (const [typeId, count] of segmentsByType) {
+  assert.ok(count >= 2, `${typeId} must have at least two visible wheel outcomes`);
+}
 
 for (const cssPath of ['./assets/css/sports.css', './assets/css/casino.css']) {
   const css = read(cssPath);
@@ -78,12 +106,20 @@ for (const cssPath of ['./assets/css/sports.css', './assets/css/casino.css']) {
 }
 
 const sportsJs = read('./assets/js/sports.js');
+const casinoJs = read('./assets/js/casino.js');
 assert.match(sportsJs, /sports\.nearThresholdMultiple/, 'grading must consume nearThresholdMultiple');
 assert.match(sportsJs, /sports\.grid\.cols/, 'sports rendering must consume config grid columns');
 assert.match(sportsJs, /sports\.grid\.rows/, 'sports rendering must consume config grid rows');
 
 assert.doesNotMatch(sportsJs, /data-action="pick-(team|zone)"/, 'sports must remain a one-action game');
 assert.match(sportsJs, /renderAiming\(\)/, 'sports must open directly on the timing mechanic');
+assert.match(casinoJs, /casino\.wheel\.segments/, 'casino wheel must consume configured segments');
+assert.match(casinoJs, /casino\.wheel\.spinDurationMs/, 'casino spin duration must come from config');
+assert.match(casinoJs, /data-action="choose-preference"/, 'casino must collect a preference before spinning');
+assert.match(casinoJs, /data-action="spin-wheel"/, 'casino must expose an explicit spin action');
+assert.match(casinoJs, /withLock\(duration, spinWheel\)/, 'casino spin must remain protected by the interaction lock');
+assert.match(casinoJs, /STORAGE_VERSION = 2/, 'casino persistence must reject outcomes from the previous mechanic');
+assert.doesNotMatch(casinoJs, /data-action="(add|remove)-token"/, 'legacy token allocation controls must be removed');
 function evaluateVariant(headlines, experimentId, query, stored) {
   const storageKey = 'exp_headline_' + experimentId;
   const values = new Map(stored ? [[storageKey, stored]] : []);
@@ -110,4 +146,4 @@ assert.deepEqual(evaluateVariant(extensibleHeadlines, 'sports', '?variant=C').me
 const namespaced = evaluateVariant(config.sports.headlines, 'sports', '?variant=B');
 assert.equal(namespaced.values.get('exp_headline_sports'), 'B');
 assert.equal(namespaced.values.has('exp_headline_casino'), false);
-console.log('Verified config schema, offer ladder, dynamic geometry, UI copy, and A/B routing.');
+console.log('Verified config schema, offer contracts, dynamic geometry, wheel state, UI copy, and A/B routing.');

@@ -73,35 +73,47 @@
   "casino": {
     "ui": {
       "experienceLabel": "Personalised welcome offer",
-      "loading": "Warming up…",
-      "stepAllocate": "Build your welcome package",
-      "tokensLeftSingular": "token left to place",
-      "tokensLeftPlural": "tokens left to place",
-      "yourPackage": "Your package",
-      "packageEmpty": "Place your tokens to build your package.",
-      "lockIn": "Lock it in",
+      "loading": "Preparing your wheel…",
+      "stepChoose": "Choose your bonus",
+      "chooseHint": "Pick what matters most, then spin.",
+      "selectedLabel": "{type} selected",
+      "stepSpin": "Your bonus wheel",
+      "spinHint": "One spin. A guaranteed {type} reward.",
+      "stepSpinning": "Finding your best match…",
+      "spinButton": "Spin my wheel",
+      "spinAriaLabel": "Spin the personalised bonus wheel",
       "startOver": "Start over",
       "errorTitle": "Couldn't load this page",
       "errorBody": "Give it another go.",
       "errorRetry": "Retry",
-      "bonusSuffix": "bonus",
-      "removeTokenLabel": "Remove token from {type}",
-      "tokenPlacedAnnouncement": "Token placed on {type}.",
-      "packageLockedAnnouncement": "Package locked. {bonus} applied.",
-      "handoffCopy": "In production, your personalised package carries through to the operator's account flow."
+      "preferenceAnnouncement": "{type} selected. Your personalised wheel is ready.",
+      "spinningAnnouncement": "The bonus wheel is spinning.",
+      "outcomeAnnouncement": "Your wheel landed on {reward}.",
+      "rewardEyebrow": "Your welcome package",
+      "matchedLabel": "Matched to your choice",
+      "handoffCopy": "In production, this selected offer carries through to the operator's account flow."
     },
     "headlines": {
-      "A": { "headline": "Build your welcome package", "subheadline": "Three tokens. Your call." },
-      "B": { "headline": "Your bonus, your call", "subheadline": "No spinning. You choose." }
+      "A": { "headline": "Build your welcome package", "subheadline": "Choose your bonus, then spin." },
+      "B": { "headline": "Your bonus, your call", "subheadline": "Pick what matters most, then reveal your offer." }
     },
-    "tokenCount": 3,
-    "maxTokensPerType": 3,
     "bonusTypes": [
-      { "id": "spins", "label": "Free Spins", "unit": "spins", "perToken": 25, "blurb": "Best for slots" },
-      { "id": "match", "label": "Deposit Match", "unit": "%", "perToken": 40, "blurb": "Best for bigger bankrolls" },
-      { "id": "cashback", "label": "Cashback", "unit": "%", "perToken": 8, "blurb": "Best for playing it safe" }
+      { "id": "spins", "label": "Free Spins", "mark": "FS", "color": "#e95fbd", "blurb": "More chances to explore" },
+      { "id": "match", "label": "Deposit Match", "mark": "%", "color": "#9b7aef", "blurb": "More value from a deposit" },
+      { "id": "cashback", "label": "Cashback", "mark": "CB", "color": "#42c8ba", "blurb": "A softer landing" }
     ],
-    "bonusToken": { "label": "One on us", "count": 1, "revealCopy": "We rounded it up." },
+    "wheel": {
+      "spinDurationMs": 2400,
+      "turns": 5,
+      "segments": [
+        { "id": "spins-50", "typeId": "spins", "value": 50, "label": "50 Spins", "color": "#b83280" },
+        { "id": "match-80", "typeId": "match", "value": 80, "label": "80% Match", "color": "#6842c2" },
+        { "id": "cashback-16", "typeId": "cashback", "value": 16, "label": "16% Back", "color": "#087a70" },
+        { "id": "spins-75", "typeId": "spins", "value": 75, "label": "75 Spins", "color": "#8f2665" },
+        { "id": "match-120", "typeId": "match", "value": 120, "label": "120% Match", "color": "#4e2c9e" },
+        { "id": "cashback-24", "typeId": "cashback", "value": 24, "label": "24% Back", "color": "#075e58" }
+      ]
+    },
     "cta": { "label": "Claim your package", "target": "#demo-complete" }
   }
 }

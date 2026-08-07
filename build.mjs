@@ -18,16 +18,20 @@ const pages = [
 for (const page of pages) {
   const scssPath = path.join(root, page.scss);
   const result = compile(scssPath, { style: 'compressed', loadPaths: [path.join(root, 'assets', 'scss')] });
+  // Sass may prefix compressed CSS containing non-ASCII characters with a UTF-8
+  // BOM. It is harmless in a standalone file, but invalidates the first selector
+  // when the CSS is injected inside a <style> element.
+  const css = result.css.replace(/^\uFEFF/, '');
   const cssOutPath = path.join(cssDir, `${page.name}.css`);
-  writeFileSync(cssOutPath, result.css, 'utf8');
-  console.log(`compiled ${page.scss} -> assets/css/${page.name}.css (${result.css.length} bytes)`);
+  writeFileSync(cssOutPath, css, 'utf8');
+  console.log(`compiled ${page.scss} -> assets/css/${page.name}.css (${css.length} bytes)`);
 
   const htmlPath = path.join(root, page.html);
   let html = readFileSync(htmlPath, 'utf8');
 
-  const styleBlock = `<style>${result.css}</style>`;
+  const styleBlock = `<style>${css}</style>`;
   if (/<style id="critical-css">[\s\S]*?<\/style>/.test(html)) {
-    html = html.replace(/<style id="critical-css">[\s\S]*?<\/style>/, `<style id="critical-css">${result.css}</style>`);
+    html = html.replace(/<style id="critical-css">[\s\S]*?<\/style>/, `<style id="critical-css">${css}</style>`);
   } else {
     html = html.replace('</head>', `${styleBlock.replace('<style>', '<style id="critical-css">')}\n</head>`);
   }

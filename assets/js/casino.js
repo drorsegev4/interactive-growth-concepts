@@ -1,10 +1,13 @@
 import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate, getVariant } from './core.js';
 
 const STORAGE_KEY = 'outcome_casino';
+const STORAGE_VERSION = 2;
 const els = {};
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 let cfg = null;
 let casino = null;
-let state = { step: 'allocate', allocation: {} };
+let state = { step: 'choose', preferenceId: null, segmentId: null };
 let landingStartedAt = 0;
 
 function $(id) {
@@ -33,8 +36,8 @@ function renderShell() {
   els.loadingLabel.textContent = casino.ui.loading;
   els.eyebrow.textContent = casino.ui.experienceLabel;
 }
-function renderHero(meta) {
 
+function renderHero(meta) {
   const copy = casino.headlines[meta.variant] || casino.headlines.A;
   els.headline.textContent = copy.headline;
   els.subheadline.textContent = copy.subheadline;
@@ -73,146 +76,159 @@ function withLock(durationMs, fn) {
   return true;
 }
 
-function easeOutExpo(t) {
-  return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+function getType(typeId) {
+  return casino.bonusTypes.find((type) => type.id === typeId) || null;
 }
 
-function countUp(el, from, to, duration = 400) {
-  const start = performance.now();
-  function frame(now) {
-    const t = Math.min((now - start) / duration, 1);
-    const value = from + (to - from) * easeOutExpo(t);
-    el.textContent = Math.round(value);
-    if (t < 1) requestAnimationFrame(frame);
-    else el.textContent = Math.round(to);
-  }
-  requestAnimationFrame(frame);
+function getSegment(segmentId) {
+  return casino.wheel.segments.find((segment) => segment.id === segmentId) || null;
 }
 
-function totalPlaced(allocation) {
-  return Object.values(allocation).reduce((sum, n) => sum + n, 0);
+function preferredSegment(typeId) {
+  return casino.wheel.segments
+    .filter((segment) => segment.typeId === typeId)
+    .sort((a, b) => b.value - a.value)[0] || null;
 }
 
-function formatValue(type, count) {
-  const value = type.perToken * count;
-  return type.unit === '%' ? `${value}%` : `${value} ${type.unit}`;
+function wheelGradient() {
+  const segments = casino.wheel.segments;
+  const slice = 360 / segments.length;
+  return `conic-gradient(${segments
+    .map((segment, index) => `${segment.color} ${index * slice}deg ${(index + 1) * slice}deg`)
+    .join(', ')})`;
 }
 
-function packageRowsHtml(allocation, bonusCategoryId) {
-  const rows = casino.bonusTypes
-    .filter((type) => allocation[type.id] > 0)
-    .map((type) => {
-      const isBonus = type.id === bonusCategoryId;
-      return `<div class="package__row${isBonus ? ' package__row--bonus' : ''}">
-        <span>${type.label}${isBonus ? ` +${casino.ui.bonusSuffix}` : ''}</span>
-        <span data-value-for="${type.id}">${formatValue(type, allocation[type.id])}</span>
-      </div>`;
-    })
-    .join('');
-  return rows || `<p class="package__empty">${casino.ui.packageEmpty}</p>`;
-}
-
-// ---- Step: allocate ----
-function renderAllocate() {
-  state.step = 'allocate';
-  document.documentElement.style.removeProperty('--accent');
-
-  const ui = casino.ui;
-  const remaining = casino.tokenCount - totalPlaced(state.allocation);
-  const tokensLeftLabel = remaining === 1 ? ui.tokensLeftSingular : ui.tokensLeftPlural;
-
-  const categoriesHtml = casino.bonusTypes
-    .map((type) => {
-      const count = state.allocation[type.id] || 0;
-      const pips = Array.from({ length: count })
-        .map(() => `<button class="pip is-filled" type="button" data-action="remove-token" data-type-id="${type.id}" aria-label="${interpolate(ui.removeTokenLabel, { type: type.label })}"></button>`)
-        .join('');
-      const atCategoryMax = count >= casino.maxTokensPerType;
-      const disabled = remaining <= 0 || atCategoryMax;
-      return `
-      <div class="category-row">
-        <button class="category" type="button" data-action="add-token" data-type-id="${type.id}" ${disabled ? 'disabled aria-disabled="true"' : ''}>
-          <span class="category__info">
-            <span class="category__label">${type.label}</span>
-            <span class="category__blurb">${type.blurb}</span>
-          </span>
-          <span class="category__count">${count}/${casino.maxTokensPerType}</span>
-        </button>
-        ${count > 0 ? `<div class="category__pips">${pips}</div>` : ''}
-      </div>`;
-    })
+function wheelHtml({ rotation = 0, spinning = false } = {}) {
+  const segments = casino.wheel.segments;
+  const slice = 360 / segments.length;
+  const labels = segments
+    .map((segment, index) => `
+      <span class="wheel__label" style="--segment-angle:${(index + 0.5) * slice}deg">
+        <span>${segment.label}</span>
+      </span>`)
     .join('');
 
-  els.builder.innerHTML = `
-    <h2 class="builder__title">${ui.stepAllocate}</h2>
-    <p class="token-bank">${remaining} ${tokensLeftLabel}</p>
-    <div class="categories">${categoriesHtml}</div>
-    <div class="package">
-      <p class="package__title">${ui.yourPackage}</p>
-      <div id="package-rows">${packageRowsHtml(state.allocation)}</div>
+  return `
+    <div class="wheel-stage${spinning ? ' is-spinning' : ''}" style="--spin-duration:${casino.wheel.spinDurationMs}ms">
+      <span class="wheel-pointer" aria-hidden="true"></span>
+      <div class="wheel" role="img" aria-label="${casino.ui.spinAriaLabel}">
+        <div class="wheel__disc" style="--wheel-rotation:${rotation}deg;background:${wheelGradient()}">
+          ${labels}
+        </div>
+        <div class="wheel__hub" aria-hidden="true"><span>365</span></div>
+      </div>
     </div>
-    <button class="cta lock-in" type="button" data-action="lock-in" ${remaining > 0 ? 'disabled aria-disabled="true"' : ''}>${ui.lockIn}</button>
   `;
 }
 
-function handleAddToken(typeId) {
-  const remaining = casino.tokenCount - totalPlaced(state.allocation);
-  const current = state.allocation[typeId] || 0;
-  if (remaining <= 0 || current >= casino.maxTokensPerType) return;
-  state.allocation[typeId] = current + 1;
-  track('token_placed', { bonus_type_id: typeId, count_in_category: state.allocation[typeId] });
-  renderAllocate();
-  const type = casino.bonusTypes.find((item) => item.id === typeId);
-  announce(interpolate(casino.ui.tokenPlacedAnnouncement, { type: type.label }));
+function preferenceButtonsHtml() {
+  return casino.bonusTypes
+    .map((type) => {
+      const selected = type.id === state.preferenceId;
+      return `
+        <button class="preference${selected ? ' is-selected' : ''}" type="button"
+          data-action="choose-preference" data-type-id="${type.id}"
+          aria-pressed="${selected}" style="--choice-color:${type.color || 'var(--accent)'}">
+          <span class="preference__mark" aria-hidden="true">${type.mark}</span>
+          <span class="preference__copy">
+            <strong>${type.label}</strong>
+            <small>${type.blurb}</small>
+          </span>
+        </button>
+      `;
+    })
+    .join('');
 }
 
-function handleRemoveToken(typeId) {
-  if (!state.allocation[typeId]) return;
-  state.allocation[typeId] -= 1;
-  if (state.allocation[typeId] <= 0) delete state.allocation[typeId];
-  track('token_removed', { bonus_type_id: typeId });
-  renderAllocate();
+function renderReady() {
+  state.step = state.preferenceId ? 'ready' : 'choose';
+  const ui = casino.ui;
+  const selectedType = getType(state.preferenceId);
+  const helper = selectedType
+    ? interpolate(ui.selectedLabel, { type: selectedType.label })
+    : ui.chooseHint;
+
+  els.builder.innerHTML = `
+    <div class="wheel-flow">
+      <div class="wheel-flow__intro">
+        <h2 class="builder__title">${ui.stepChoose}</h2>
+        <p class="builder__hint">${helper}</p>
+      </div>
+      <div class="preferences" aria-label="${ui.stepChoose}">
+        ${preferenceButtonsHtml()}
+      </div>
+      <div class="wheel-flow__spin">
+        ${wheelHtml()}
+        <button class="cta spin-cta" type="button" data-action="spin-wheel"
+          ${selectedType ? '' : 'disabled aria-disabled="true"'}>${ui.spinButton}</button>
+      </div>
+    </div>
+  `;
 }
 
-function pickBonusCategory(allocation) {
-  let bestId = null;
-  let bestCount = -1;
-  for (const type of casino.bonusTypes) {
-    const count = allocation[type.id] || 0;
-    if (count > bestCount) {
-      bestCount = count;
-      bestId = type.id;
-    }
-  }
-  return bestId;
+function choosePreference(typeId) {
+  const type = getType(typeId);
+  if (!type) return;
+  state.preferenceId = type.id;
+  state.segmentId = null;
+  track('preference_selected', { bonus_type_id: type.id });
+  renderReady();
+  els.builder.querySelector('[data-action="spin-wheel"]')?.focus();
+  announce(interpolate(casino.ui.preferenceAnnouncement, { type: type.label }));
 }
 
-// ---- Lock in / reveal ----
-function lockIn() {
-  const remaining = casino.tokenCount - totalPlaced(state.allocation);
-  if (remaining > 0) return;
+function renderSpinning(rotation, type) {
+  state.step = 'spin';
+  const ui = casino.ui;
+  els.builder.innerHTML = `
+    <div class="wheel-flow wheel-flow--spinning">
+      <div class="wheel-flow__intro">
+        <p class="step-kicker">${interpolate(ui.selectedLabel, { type: type.label })}</p>
+        <h2 class="builder__title">${ui.stepSpinning}</h2>
+        <p class="builder__hint">${interpolate(ui.spinHint, { type: type.label })}</p>
+      </div>
+      ${wheelHtml({ rotation })}
+    </div>
+  `;
 
-  const bonusCategoryId = pickBonusCategory(state.allocation);
-  track('package_locked', { allocation: { ...state.allocation }, bonus_category: bonusCategoryId });
-
-  const finalAllocation = { ...state.allocation };
-  finalAllocation[bonusCategoryId] = (finalAllocation[bonusCategoryId] || 0) + casino.bonusToken.count;
-
-  renderReveal(finalAllocation, bonusCategoryId);
+  const stage = els.builder.querySelector('.wheel-stage');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => stage?.classList.add('is-spinning'));
+  });
 }
 
-function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
-  state.step = 'reveal';
+function spinWheel() {
+  const type = getType(state.preferenceId);
+  const segment = type && preferredSegment(type.id);
+  if (!type || !segment) return;
+
+  const segmentIndex = casino.wheel.segments.findIndex((item) => item.id === segment.id);
+  const slice = 360 / casino.wheel.segments.length;
+  const rotation = (prefersReducedMotion ? 0 : casino.wheel.turns * 360) - (segmentIndex + 0.5) * slice;
+  const duration = prefersReducedMotion ? 80 : casino.wheel.spinDurationMs;
+
+  state.segmentId = segment.id;
+  track('wheel_spun', { bonus_type_id: type.id, segment_id: segment.id });
+  renderSpinning(rotation, type);
+  announce(casino.ui.spinningAnnouncement);
+
+  const revealDelay = prefersReducedMotion ? duration : duration + 80;
+  setTimeout(() => renderReveal(type, segment), revealDelay);
+}
+
+function renderReveal(type, segment, restored = false) {
+  state = { step: 'reveal', preferenceId: type.id, segmentId: segment.id };
   const ui = casino.ui;
 
   els.builder.innerHTML = `
-    <div class="reveal">
-      <span class="reveal__tag">${casino.bonusToken.label}</span>
-      <p class="reveal__reveal-copy">${casino.bonusToken.revealCopy}</p>
-      <div class="package is-boosted" id="package-card">
-        <p class="package__title">${ui.yourPackage}</p>
-        <div id="package-rows">${packageRowsHtml(finalAllocation, bonusCategoryId)}</div>
+    <div class="reveal reward-reveal">
+      <div class="reward-orbit" aria-hidden="true">
+        <span class="reward-orbit__ring"></span>
+        <span class="reward-orbit__mark">${type.mark}</span>
       </div>
+      <span class="reveal__tag">${ui.matchedLabel}</span>
+      <p class="reward-reveal__value">${segment.label}</p>
+      <p class="reward-reveal__type">${type.label}</p>
       <p class="reveal__handoff">${ui.handoffCopy}</p>
       <a class="cta" id="cta" href="${casino.cta.target}">${casino.cta.label}</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
@@ -220,45 +236,59 @@ function renderReveal(finalAllocation, bonusCategoryId, restored = false) {
     </div>
   `;
 
-  announce(interpolate(ui.packageLockedAnnouncement, { bonus: casino.bonusToken.label }));
+  announce(interpolate(ui.outcomeAnnouncement, { reward: segment.label }));
 
   if (!restored) {
-    track('outcome_revealed', { final_allocation: finalAllocation, bonus_category: bonusCategoryId });
+    track('outcome_revealed', {
+      bonus_type_id: type.id,
+      segment_id: segment.id,
+      reward_value: segment.value,
+    });
   }
 
   $('cta').addEventListener('click', () => {
-    track('cta_clicked', { total_time_ms: Math.round(performance.now() - landingStartedAt) });
+    track('cta_clicked', {
+      bonus_type_id: type.id,
+      segment_id: segment.id,
+      total_time_ms: Math.round(performance.now() - landingStartedAt),
+    });
   });
 
-  persist({ allocation: state.allocation, finalAllocation, bonusCategoryId, revealedAt: Date.now() });
+  persist({
+    version: STORAGE_VERSION,
+    preferenceId: type.id,
+    segmentId: segment.id,
+    revealedAt: Date.now(),
+  });
 
   const revealEl = els.builder.querySelector('.reveal');
-  revealEl.setAttribute('tabindex', '-1'); revealEl.setAttribute('data-focus-on-unlock', '');
+  revealEl.setAttribute('tabindex', '-1');
+  revealEl.setAttribute('data-focus-on-unlock', '');
 }
 
 function persist(outcome) {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(outcome));
-  } catch (e) {
-    // storage unavailable — non-fatal, replay guard simply won't persist across reload
+  } catch {
+    // Storage unavailable is non-fatal; the replay guard simply cannot persist.
   }
 }
 
 function restoreOutcome() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (e) {
+    return raw ? JSON.parse(raw) : null;
+  } catch {
     return null;
   }
 }
 
 function startOver() {
   sessionStorage.removeItem(STORAGE_KEY);
-  state = { step: 'allocate', allocation: {} };
+  state = { step: 'choose', preferenceId: null, segmentId: null };
   track('flow_restarted', {});
-  renderAllocate();
+  renderReady();
+  els.builder.querySelector('[data-action="choose-preference"]')?.setAttribute('data-focus-on-unlock', '');
 }
 
 function renderError(reason) {
@@ -270,8 +300,8 @@ function renderError(reason) {
     errorRetry: 'Retry',
   };
   els.builder.innerHTML = `
-    <div class="reveal">
-      <p class="package__empty"><strong>${ui.errorTitle}.</strong> ${ui.errorBody}</p>
+    <div class="reveal error-state">
+      <p><strong>${ui.errorTitle}.</strong> ${ui.errorBody}</p>
       <button class="cta retry-btn" type="button" data-action="retry">${ui.errorRetry}</button>
     </div>
   `;
@@ -282,35 +312,27 @@ function renderError(reason) {
 
 function onBuilderClick(event) {
   if (!event.isTrusted) return;
-  const btn = event.target.closest('[data-action]');
-  if (!btn || btn.disabled) return;
+  const control = event.target.closest('[data-action]');
+  if (!control || control.disabled) return;
 
-  const action = btn.dataset.action;
-
-  if (action === 'add-token') {
-    if (state.step !== 'allocate') return;
-    handleAddToken(btn.dataset.typeId);
+  const action = control.dataset.action;
+  if (action === 'choose-preference' && ['choose', 'ready'].includes(state.step)) {
+    choosePreference(control.dataset.typeId);
     return;
   }
 
-  if (action === 'remove-token') {
-    if (state.step !== 'allocate') return;
-    handleRemoveToken(btn.dataset.typeId);
+  if (action === 'spin-wheel' && state.step === 'ready') {
+    const duration = prefersReducedMotion ? 280 : casino.wheel.spinDurationMs + 250;
+    withLock(duration, spinWheel);
     return;
   }
 
-  if (action === 'lock-in') {
-    if (state.step !== 'allocate') return;
-    withLock(900 + 200, lockIn);
-    return;
-  }
-
-  if (action === 'start-over') {
+  if (action === 'start-over' && state.step === 'reveal') {
     withLock(300, startOver);
     return;
   }
 
-  if (action === 'retry') {
+  if (action === 'retry' && state.step === 'error') {
     withLock(300, () => {
       resetConfig();
       boot();
@@ -329,7 +351,7 @@ async function boot() {
   els.spinnerLayer.hidden = false;
   els.builder.hidden = true;
 
-  const latencyPromise = readyAfterLatency(cfg && cfg.global ? cfg.global.loadingDurationMs : 1500);
+  const latencyPromise = readyAfterLatency(cfg?.global?.loadingDurationMs || 1500);
 
   try {
     cfg = await loadConfig();
@@ -338,29 +360,30 @@ async function boot() {
     renderError(err.message);
     return;
   }
+
   casino = cfg.casino;
   const variantMeta = getVariant(casino.headlines, 'casino');
-
   renderHero(variantMeta);
   renderRgFooter();
-
   renderShell();
   await latencyPromise;
 
-  let restored = restoreOutcome();
-  const validRestore = restored && restored.finalAllocation && restored.bonusCategoryId;
-  if (restored && !validRestore) {
-    sessionStorage.removeItem(STORAGE_KEY);
-    restored = null;
-  }
-  els.builder.hidden = false;
+  const restored = restoreOutcome();
+  const restoredType = restored && getType(restored.preferenceId);
+  const restoredSegment = restored && getSegment(restored.segmentId);
+  const validRestore = restored?.version === STORAGE_VERSION
+    && restoredType
+    && restoredSegment
+    && restoredSegment.typeId === restoredType.id;
 
-  if (restored) {
-    state = { step: 'reveal', allocation: restored.allocation || {} };
-    renderReveal(restored.finalAllocation, restored.bonusCategoryId, true);
+  els.builder.hidden = false;
+  if (validRestore) {
+    renderReveal(restoredType, restoredSegment, true);
     track('interaction_blocked', { during_state: 'reveal-restore' });
   } else {
-    renderAllocate();
+    if (restored) sessionStorage.removeItem(STORAGE_KEY);
+    state = { step: 'choose', preferenceId: null, segmentId: null };
+    renderReady();
   }
 
   els.spinnerLayer.hidden = true;
