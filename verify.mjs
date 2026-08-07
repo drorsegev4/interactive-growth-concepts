@@ -20,10 +20,10 @@ const sportsUiKeys = [
 ];
 
 const casinoUiKeys = [
-  'loading', 'stepChooseKicker', 'stepSpinKicker', 'stepChoose', 'chooseHint', 'selectedLabel',
-  'stepSpin', 'stepSpinning', 'spinHint', 'floorNote', 'changeChoice', 'guaranteeNote', 'spinButton',
-  'spinAriaLabel', 'startOver', 'errorTitle', 'errorBody', 'errorRetry', 'preferenceAnnouncement',
-  'spinningAnnouncement', 'outcomeAnnouncement', 'rewardEyebrow', 'matchedLabel', 'handoffCopy',
+  'loading', 'stepSpinKicker', 'stepClaimKicker', 'stepSpin', 'spinHint', 'floorNote', 'stepSpinning',
+  'spinButton', 'spinAriaLabel', 'startOver', 'errorTitle', 'errorBody', 'errorRetry',
+  'spinningAnnouncement', 'wonLabel', 'unitSuffix', 'claimTitle', 'claimHint', 'outcomeAnnouncement',
+  'formatAnnouncement', 'chooseToClaim', 'rewardEyebrow', 'handoffCopy',
 ];
 
 assert.ok(
@@ -98,63 +98,71 @@ for (const side of ['home', 'away']) {
 
 /* --------------------------------------------------------- casino / wheel */
 
-assert.ok(config.casino.bonusTypes.length >= 3, 'casino must offer at least three preference types');
 assert.ok(config.casino.wheel.hubLabel, 'wheel hub label must be config-driven');
+assert.ok(config.casino.wheel.unitLabel, 'the neutral prize unit must be config-driven');
 assert.ok(config.casino.wheel.spinDurationMs >= 1000, 'casino spin must provide a legible reveal moment');
 assert.ok(Number.isInteger(config.casino.wheel.turns) && config.casino.wheel.turns >= 3, 'casino wheel turns must be a positive configured integer');
 assert.equal(config.casino.wheel.segments, undefined, 'the flat cross-type segment list must be gone');
+assert.equal(config.casino.bonusTypes, undefined, 'the choose-then-spin bonus types must be gone');
 
-// Category is the user's choice; magnitude is what the spin resolves. Each bonus
-// type therefore owns a tier ladder, and choosing rebuilds the wheel from it.
-const bonusTypeIds = new Set();
-const allTierIds = new Set();
-for (const type of config.casino.bonusTypes) {
-  assert.ok(type.id && type.label && type.mark && type.blurb && type.color, 'each casino preference must be fully configured');
-  assert.ok(!bonusTypeIds.has(type.id), `casino preference ${type.id} must be unique`);
-  bonusTypeIds.add(type.id);
+// The spin comes first and must carry real information. A wheel whose result is
+// already determined by an earlier choice is animation over a foregone
+// conclusion, and users read that within one spin.
+const prizes = config.casino.wheel.prizes;
+assert.ok(Array.isArray(prizes) && prizes.length >= 4, 'the wheel needs at least four prizes to read as a wheel');
 
-  assert.ok(Array.isArray(type.tiers) && type.tiers.length >= 3, `${type.id} needs a ladder of at least three tiers`);
-
-  // The card must state what the bonus is worth, so the choice is informed
-  // rather than blind. The range is templated off the tier values, so the
-  // numbers are never written down twice.
-  assert.ok(type.rangeTemplate, `${type.id} must supply a range template for its card`);
-  assert.match(type.rangeTemplate, /\{floor\}/, `${type.id} range must interpolate its floor`);
-  assert.match(type.rangeTemplate, /\{ceiling\}/, `${type.id} range must interpolate its ceiling`);
-  assert.doesNotMatch(
-    type.rangeTemplate,
-    new RegExp(`\\b(${type.tiers.map((tier) => tier.value).join('|')})\\b`),
-    `${type.id} range template must derive its numbers, not hardcode them`
-  );
-
-  for (const tier of type.tiers) {
-    assert.ok(tier.id && tier.label && tier.color, `each ${type.id} tier must be fully configured`);
-    assert.ok(!allTierIds.has(tier.id), `tier ${tier.id} must be unique across the config`);
-    assert.ok(Number.isFinite(tier.value) && tier.value > 0, `${tier.id} must have a positive value`);
-    // Every tier must be reachable. The earlier build always awarded the highest
-    // value per type, leaving half the wheel as dead config while still animating
-    // a spin over it.
-    assert.ok(Number.isFinite(tier.weight) && tier.weight > 0, `${tier.id} must carry a positive selection weight`);
-    allTierIds.add(tier.id);
-  }
-
-  const values = type.tiers.map((tier) => tier.value);
-  const floor = Math.min(...values);
-  const ceiling = Math.max(...values);
-  // A ladder only creates tension if the top is meaningfully above the floor.
-  // The previous 50-vs-75 spread was too tight to be worth a spin.
-  assert.ok(ceiling >= floor * 2, `${type.id} ladder is too flat (${floor} to ${ceiling}) to justify a spin`);
-
-  // The floor must be the most likely outcome, so the promise is not just
-  // technically true but actually where most users land.
-  const byWeight = [...type.tiers].sort((a, b) => b.weight - a.weight);
-  assert.equal(byWeight[0].value, floor, `${type.id} must make its guaranteed floor the most likely tier`);
-
-  // And the top rung must not be dressed up as likely.
-  const total = type.tiers.reduce((sum, tier) => sum + tier.weight, 0);
-  const topChance = type.tiers.find((tier) => tier.value === ceiling).weight / total;
-  assert.ok(topChance <= 0.25, `${type.id} top tier at ${(topChance * 100).toFixed(0)}% would overstate the upside`);
+const prizeIds = new Set();
+for (const prize of prizes) {
+  assert.ok(prize.id && prize.label && prize.color, 'each prize must be fully configured');
+  assert.ok(!prizeIds.has(prize.id), `prize ${prize.id} must be unique`);
+  assert.ok(Number.isFinite(prize.value) && prize.value > 0, `${prize.id} must have a positive value`);
+  assert.ok(Number.isFinite(prize.weight) && prize.weight > 0, `${prize.id} must be reachable`);
+  prizeIds.add(prize.id);
 }
+
+const prizeTotal = prizes.reduce((sum, prize) => sum + prize.weight, 0);
+const probabilities = prizes.map((prize) => prize.weight / prizeTotal);
+const entropy = -probabilities.reduce((sum, p) => sum + (p > 0 ? p * Math.log2(p) : 0), 0);
+// A fair coin carries 1 bit. Below that the spin is barely deciding anything.
+assert.ok(entropy >= 1.5, `the spin carries only ${entropy.toFixed(2)} bits; it must be genuinely uncertain`);
+
+const prizeValues = prizes.map((prize) => prize.value);
+const prizeFloor = Math.min(...prizeValues);
+const prizeCeiling = Math.max(...prizeValues);
+assert.ok(prizeCeiling >= prizeFloor * 2, `prize spread ${prizeFloor}..${prizeCeiling} is too flat to justify a spin`);
+
+// The floor must be the most likely outcome, so the guarantee describes where
+// most people actually land rather than being a technicality.
+const mostLikely = [...prizes].sort((a, b) => b.weight - a.weight)[0];
+assert.equal(mostLikely.value, prizeFloor, 'the guaranteed floor must be the most likely prize');
+
+// And the top prize must not be dressed up as likely.
+const topChance = prizes.find((prize) => prize.value === prizeCeiling).weight / prizeTotal;
+assert.ok(topChance <= 0.25, `top prize at ${(topChance * 100).toFixed(0)}% would overstate the upside`);
+
+// The floor is promised before the spin, not revealed after it.
+assert.match(config.casino.ui.spinHint, /\{floor\}/, 'the spin hint must state the guaranteed floor');
+assert.match(config.casino.ui.floorNote, /\{floor\}/, 'the floor note must state the guaranteed floor');
+
+// One win, three shapes. Converting the same amount into every format is what
+// makes the options comparable as concrete numbers rather than as jargon.
+assert.ok(Array.isArray(config.casino.formats) && config.casino.formats.length >= 3, 'at least three claim formats are required');
+const formatIds = new Set();
+for (const format of config.casino.formats) {
+  assert.ok(format.id && format.label && format.mark && format.blurb && format.color, 'each format must be fully configured');
+  assert.ok(!formatIds.has(format.id), `format ${format.id} must be unique`);
+  assert.ok(Number.isFinite(format.perUnit) && format.perUnit > 0, `${format.id} needs a positive conversion rate`);
+  assert.ok(typeof format.suffix === 'string' && format.suffix.length, `${format.id} needs a unit suffix`);
+  // Every format must still be worth something at the smallest win, or the
+  // floor reads as worthless in that shape.
+  const atFloor = Math.round(prizeFloor * format.perUnit);
+  assert.ok(atFloor >= 5, `${format.id} yields only ${atFloor} at the floor prize`);
+  formatIds.add(format.id);
+}
+
+// Naming the chosen format in the CTA is what makes the choice a payload for the
+// handoff rather than decoration.
+assert.match(config.casino.cta.label, /\{format\}/, 'the claim CTA must name the chosen format');
 
 /* --------------------------------------------------------------- stylesheets */
 
@@ -237,37 +245,33 @@ assert.doesNotMatch(sportsJs, /setProperty\('--accent'/, 'the team colour must n
 
 assert.match(casinoJs, /casino\.wheel\.spinDurationMs/, 'casino spin duration must come from config');
 assert.match(casinoJs, /casino\.wheel\.hubLabel/, 'wheel hub label must come from config');
-assert.match(casinoJs, /data-action="choose-preference"/, 'casino must collect a preference before spinning');
 assert.match(casinoJs, /data-action="spin-wheel"/, 'casino must expose an explicit spin action');
 assert.match(casinoJs, /withLock\(duration, spinWheel\)/, 'casino spin must remain protected by the interaction lock');
-assert.match(casinoJs, /STORAGE_VERSION = 3/, 'casino persistence must reject outcomes from the previous reward shape');
+assert.match(casinoJs, /STORAGE_VERSION = 4/, 'casino persistence must reject outcomes from the previous reward shape');
 assert.doesNotMatch(casinoJs, /data-action="(add|remove)-token"/, 'legacy token allocation controls must be removed');
 assert.match(casinoJs, /data-flip=/, 'wheel labels must declare whether they need flipping');
 assert.doesNotMatch(casinoJs, /step-kicker">\s*\d/, 'step kickers must come from config, not literals');
 
-// Choosing must rebuild the wheel from the chosen type's ladder rather than
-// greying out segments that no longer apply.
-assert.match(casinoJs, /function pickTier/, 'casino must resolve magnitude by weighted tier');
-assert.match(casinoJs, /function floorTier/, 'casino must expose a guaranteed floor');
-assert.match(casinoJs, /function activeSegments/, 'the wheel must rebuild around the chosen bonus');
-assert.doesNotMatch(casinoJs, /function preferredSegment/, 'the always-highest-value selector must be gone');
-assert.doesNotMatch(casinoJs, /data-dim=/, 'the wheel must rebuild rather than dim inapplicable segments');
-assert.match(casinoJs, /tier\.weight/, 'tier selection must honour configured weights');
-assert.match(casinoJs, /floor: floorTier\(/, 'the floor must be interpolated into the pre-spin copy');
+// Spin first, choose second. The wheel must be reachable without any prior
+// decision, and nothing may narrow the prize set before it turns.
+assert.match(casinoJs, /function pickPrize/, 'the prize must be drawn from the whole wheel');
+assert.match(casinoJs, /function renderSpin\b/, 'the spin must be the opening frame');
+assert.match(casinoJs, /function renderClaim/, 'the claim screen must be its own frame');
+assert.doesNotMatch(casinoJs, /function renderChoose/, 'the choose-first frame must be gone');
+assert.doesNotMatch(casinoJs, /data-action="choose-preference"/, 'no preference may be collected before the spin');
+assert.doesNotMatch(casinoJs, /function pickTier|function preferredSegment/, 'per-category selection must be gone');
+assert.match(casinoJs, /prize\.weight/, 'prize selection must honour configured weights');
+assert.match(casinoJs, /floorPrize\(\)/, 'the guaranteed floor must come from the prize set');
 
-// The flow is two frames, each owning one decision. On a single screen the wheel
-// and the Spin CTA fell below the fold on a typical handset.
-assert.match(casinoJs, /function renderChoose/, 'the choice must be its own frame');
-assert.match(casinoJs, /function rangeLabel/, 'cards must show what each bonus is worth');
-assert.match(casinoJs, /guaranteeNote/, 'the guarantee must appear on the frame where the choice is made');
+// The format is chosen after the win, on the claim screen, and only there.
+assert.match(casinoJs, /data-action="choose-format"/, 'the format must be chosen on the claim screen');
+assert.match(casinoJs, /action === 'choose-format' && state\.step === 'claim'/, 'format choice must only be accepted once a prize is owned');
+assert.match(casinoJs, /function formatReward/, 'one win must convert into every offered format');
+
+// The chosen format has to reach the handoff, otherwise the extra tap buys
+// nothing and cost per FTD cannot be split by format.
+assert.match(casinoJs, /format_id: state\.formatId/, 'the chosen format must be carried into the CTA event');
 assert.match(casinoJs, /function stepRailHtml/, 'the flow length must be visible up front');
-assert.match(casinoJs, /function renderWheel/, 'the wheel must be its own frame');
-assert.doesNotMatch(casinoJs, /function renderReady/, 'the combined single-screen render must be gone');
-assert.match(casinoJs, /data-action="change-choice"/, 'the wheel frame must offer a way back to the choice');
-assert.match(casinoJs, /withLock\(280, changeChoice\)/, 'stepping back must be guarded like every other transition');
-// Choosing may only be accepted from the choose frame, so a stale control cannot
-// re-trigger it after the flow has advanced.
-assert.match(casinoJs, /action === 'choose-preference' && state\.step === 'choose'/, 'choice must only be accepted on its own frame');
 
 /* ------------------------------------------------------------- experiments */
 

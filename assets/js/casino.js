@@ -1,15 +1,15 @@
 import { loadConfig, resetConfig, readyAfterLatency, lock, track, interpolate, getVariant } from './core.js';
 
 const STORAGE_KEY = 'outcome_casino';
-// Bumped because the reward shape changed from a flat cross-type segment list to
-// a per-type tier ladder; outcomes stored by the previous mechanic are not valid.
-const STORAGE_VERSION = 3;
+// Bumped because the flow reversed: the wheel now wins a neutral amount and the
+// format is chosen afterwards, so outcomes stored by any earlier shape are void.
+const STORAGE_VERSION = 4;
 const els = {};
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let cfg = null;
 let casino = null;
-let state = { step: 'choose', preferenceId: null, tierId: null };
+let state = { step: 'spin', prizeId: null, formatId: null };
 let landingStartedAt = 0;
 
 function $(id) {
@@ -80,103 +80,74 @@ function withLock(durationMs, fn) {
 
 /* --------------------------------------------------------------- reward model
  *
- * Category and magnitude are deliberately separated.
+ * Spin first, choose second.
  *
- * Category (spins / match / cashback) is *relevance* — nobody is thrilled to be
- * handed cashback when they wanted spins, so the user owns that decision.
- * Magnitude is the only variable that actually carries emotion, so that is what
- * the spin resolves.
+ * The wheel wins a neutral amount of credits — genuinely uncertain across the
+ * whole prize set, so the spin carries real information rather than animating
+ * over a foregone conclusion. The format is chosen afterwards, on the claim
+ * screen, where the user already owns the win: picking how to take something you
+ * have won reads as spending winnings, where the same three options asked up
+ * front are operator jargon aimed at a stranger with no basis to prefer any.
  *
- * Choosing therefore rebuilds the wheel out of that bonus's own tier ladder
- * instead of greying out the segments that no longer apply. Every segment on
- * screen is live, and the lowest tier is a guaranteed floor that is stated
- * before the spin rather than discovered after it.
+ * The choice also stops being decoration. It is the payload that carries into
+ * the handoff, which is the only version of it worth an extra tap.
  */
 
-function getType(typeId) {
-  return casino.bonusTypes.find((type) => type.id === typeId) || null;
+function prizes() {
+  return casino.wheel.prizes;
 }
 
-function tiersFor(typeId) {
-  const type = getType(typeId);
-  return type ? type.tiers : [];
+function getPrize(prizeId) {
+  return prizes().find((prize) => prize.id === prizeId) || null;
 }
 
-function floorTier(typeId) {
-  return tiersFor(typeId).reduce((low, tier) => (tier.value < low.value ? tier : low));
+function getFormat(formatId) {
+  return casino.formats.find((format) => format.id === formatId) || null;
 }
 
-function ceilingTier(typeId) {
-  return tiersFor(typeId).reduce((high, tier) => (tier.value > high.value ? tier : high));
+function floorPrize() {
+  return prizes().reduce((low, prize) => (prize.value < low.value ? prize : low));
 }
 
-function findTier(typeId, tierId) {
-  return tiersFor(typeId).find((tier) => tier.id === tierId) || null;
-}
-
-// Weighted across the whole ladder, so every tier is reachable and the floor is
-// the most likely outcome. Weights live in config rather than in code so the
-// distribution is inspectable instead of hidden.
-function pickTier(typeId) {
-  const tiers = tiersFor(typeId);
-  if (!tiers.length) return null;
-  const total = tiers.reduce((sum, tier) => sum + tier.weight, 0);
+// Weighted across the whole prize set. Weights live in config so the
+// distribution is inspectable rather than hidden in code.
+function pickPrize() {
+  const total = prizes().reduce((sum, prize) => sum + prize.weight, 0);
   let roll = Math.random() * total;
-  for (const tier of tiers) {
-    roll -= tier.weight;
-    if (roll <= 0) return tier;
+  for (const prize of prizes()) {
+    roll -= prize.weight;
+    if (roll <= 0) return prize;
   }
-  return tiers[tiers.length - 1];
+  return prizes()[prizes().length - 1];
 }
 
-// The wheel only ever exists for a chosen bonus. There is no generic "all
-// bonuses" wheel, because the flow never shows one.
-function activeSegments() {
-  return tiersFor(state.preferenceId);
+// One win, three shapes. Converting the same amount into every format is what
+// makes the options comparable: the user reads three concrete numbers instead of
+// weighing "Deposit Match" against "Cashback" in the abstract.
+function formatReward(prize, format) {
+  const amount = Math.round(prize.value * format.perUnit);
+  return `${amount}${format.suffix}`;
 }
 
 /* ------------------------------------------------------------------- rendering */
 
-function readToken(name, fallback) {
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
-}
-
-function toRgb(hex) {
-  const value = hex.replace('#', '').trim();
-  const full = value.length === 3 ? value.split('').map((c) => c + c).join('') : value;
-  return [full.slice(0, 2), full.slice(2, 4), full.slice(4, 6)].map((pair) => parseInt(pair, 16));
-}
-
-// Blended in JS rather than with CSS color-mix() because the result is
-// interpolated into a conic-gradient inside an inline style attribute, and
-// color-mix() nested that deep proved unreliable to rasterise.
-function mixHex(from, to, amountOfTo) {
-  const a = toRgb(from);
-  const b = toRgb(to);
-  return `#${[0, 1, 2]
-    .map((i) => Math.round(a[i] + (b[i] - a[i]) * amountOfTo).toString(16).padStart(2, '0'))
-    .join('')}`;
-}
-
-function wheelGradient(segments) {
-  const slice = 360 / segments.length;
-  return `conic-gradient(${segments
-    .map((segment, index) => `${segment.color} ${index * slice}deg ${(index + 1) * slice}deg`)
+function wheelGradient() {
+  const slice = 360 / prizes().length;
+  return `conic-gradient(${prizes()
+    .map((prize, index) => `${prize.color} ${index * slice}deg ${(index + 1) * slice}deg`)
     .join(', ')})`;
 }
 
 function wheelHtml({ rotation = 0, spinning = false } = {}) {
-  const segments = activeSegments();
-  const slice = 360 / segments.length;
-  const labels = segments
-    .map((segment, index) => {
+  const slice = 360 / prizes().length;
+  const labels = prizes()
+    .map((prize, index) => {
       const angle = (index + 0.5) * slice;
       // Past the halfway point a radial label would read upside-down; the CSS
       // flips the inner span so the glyphs invert without leaving the slot.
       return `
       <span class="wheel__label" data-flip="${angle > 180}" style="--segment-angle:${angle}deg">
-        <span>${segment.label}</span>
+        <span>${prize.label}</span>
       </span>`;
     })
     .join('');
@@ -186,7 +157,7 @@ function wheelHtml({ rotation = 0, spinning = false } = {}) {
       style="--spin-duration:${casino.wheel.spinDurationMs}ms">
       <span class="wheel-pointer" aria-hidden="true"></span>
       <div class="wheel" role="img" aria-label="${casino.ui.spinAriaLabel}">
-        <div class="wheel__disc" style="--wheel-rotation:${rotation}deg;--segment-slice:${slice}deg;background:${wheelGradient(segments)}">
+        <div class="wheel__disc" style="--wheel-rotation:${rotation}deg;--segment-slice:${slice}deg;background:${wheelGradient()}">
           ${labels}
         </div>
         <div class="wheel__hub" aria-hidden="true"><span>${casino.wheel.hubLabel}</span></div>
@@ -195,133 +166,49 @@ function wheelHtml({ rotation = 0, spinning = false } = {}) {
   `;
 }
 
-// The ladder is what each bonus is actually worth, so it belongs on the card
-// rather than only appearing after the choice is made. Ranges are derived from
-// the same tier values the wheel is built from — the numbers exist once.
-function rangeLabel(type) {
-  return interpolate(type.rangeTemplate, {
-    floor: floorTier(type.id).value,
-    ceiling: ceilingTier(type.id).value,
-  });
-}
-
-function preferenceButtonsHtml() {
-  return casino.bonusTypes
-    .map((type) => {
-      const selected = type.id === state.preferenceId;
-      return `
-        <button class="preference${selected ? ' is-selected' : ''}" type="button"
-          data-action="choose-preference" data-type-id="${type.id}"
-          aria-pressed="${selected}" style="--choice-color:${type.color || 'var(--accent)'}">
-          <span class="preference__mark" aria-hidden="true">${type.mark}</span>
-          <span class="preference__copy">
-            <strong>${type.label}</strong>
-            <small>${type.blurb}</small>
-          </span>
-          <span class="preference__range">${rangeLabel(type)}</span>
-        </button>
-      `;
-    })
-    .join('');
-}
-
-function stepRailHtml() {
+function stepRailHtml(activeIndex) {
   return `
     <ol class="step-rail">
       ${casino.ui.steps
-        .map((label, index) => `<li class="step-rail__item"><span>${index + 1}</span>${label}</li>`)
+        .map(
+          (label, index) =>
+            `<li class="step-rail__item${index === activeIndex ? ' is-active' : ''}"><span>${index + 1}</span>${label}</li>`
+        )
         .join('')}
     </ol>
   `;
 }
 
-/* ------------------------------------------------------------------- frames
- *
- * The flow is two frames rather than one tall screen: choose, then spin.
- *
- * Stacked on a single screen the wheel began roughly 590px down the page, so on
- * a typical handset the rebuild animation and the Spin CTA both sat below the
- * fold — the payoff for choosing was invisible and the primary action was out of
- * reach. Splitting costs no extra taps (choose, spin, CTA either way) and gives
- * each frame one decision.
- */
-
-function renderChoose({ back = false } = {}) {
-  state.step = 'choose';
+function renderSpin() {
+  state.step = 'spin';
   const ui = casino.ui;
-
-  els.builder.innerHTML = `
-    <div class="frame${back ? ' frame--back' : ''}">
-      <div class="wheel-flow__intro">
-        <p class="step-kicker">${ui.stepChooseKicker}</p>
-        <h2 class="builder__title">${ui.stepChoose}</h2>
-        <p class="builder__hint">${ui.chooseHint}</p>
-      </div>
-      <div class="preferences" aria-label="${ui.stepChoose}">
-        ${preferenceButtonsHtml()}
-      </div>
-      <p class="guarantee-note">${ui.guaranteeNote}</p>
-      ${stepRailHtml()}
-    </div>
-  `;
-}
-
-function renderWheel({ rebuilt = false } = {}) {
-  state.step = 'ready';
-  const ui = casino.ui;
-  const type = getType(state.preferenceId);
+  const unit = casino.wheel.unitLabel;
 
   els.builder.innerHTML = `
     <div class="frame">
-      <button class="frame__back" type="button" data-action="change-choice">${ui.changeChoice}</button>
       <div class="wheel-flow__intro">
         <p class="step-kicker">${ui.stepSpinKicker}</p>
-        <h2 class="builder__title">${interpolate(ui.selectedLabel, { type: type.label })}</h2>
+        <h2 class="builder__title">${ui.stepSpin}</h2>
       </div>
-      <p class="wheel-flow__floor">${interpolate(ui.spinHint, { floor: floorTier(type.id).label })}</p>
+      <p class="wheel-flow__floor">${interpolate(ui.spinHint, { floor: floorPrize().value, unit })}</p>
       ${wheelHtml()}
       <button class="cta spin-cta" type="button" data-action="spin-wheel"
         data-focus-on-unlock>${ui.spinButton}</button>
+      ${stepRailHtml(0)}
     </div>
   `;
-
-  // The wheel being rebuilt from the chosen bonus is the reward for choosing, so
-  // it gets a beat of its own instead of simply appearing.
-  if (rebuilt && !prefersReducedMotion) {
-    els.builder.querySelector('.wheel-stage')?.classList.add('is-rebuilding');
-  }
 }
 
-function choosePreference(typeId) {
-  const type = getType(typeId);
-  if (!type) return;
-  state.preferenceId = type.id;
-  state.tierId = null;
-  track('preference_selected', {
-    bonus_type_id: type.id,
-    floor_value: floorTier(type.id).value,
-    ceiling_value: ceilingTier(type.id).value,
-  });
-  renderWheel({ rebuilt: true });
-  els.builder.querySelector('[data-action="spin-wheel"]')?.focus();
-  announce(
-    interpolate(casino.ui.preferenceAnnouncement, {
-      type: type.label,
-      floor: floorTier(type.id).label,
-      ceiling: ceilingTier(type.id).label,
-    })
-  );
-}
-
-function renderSpinning(rotation, type) {
-  state.step = 'spin';
+function renderSpinning(rotation) {
+  state.step = 'spinning';
   const ui = casino.ui;
+  const unit = casino.wheel.unitLabel;
+
   els.builder.innerHTML = `
     <div class="frame frame--spinning">
       <div class="wheel-flow__intro">
-        <p class="step-kicker">${interpolate(ui.selectedLabel, { type: type.label })}</p>
         <h2 class="builder__title">${ui.stepSpinning}</h2>
-        <p class="builder__hint">${interpolate(ui.floorNote, { floor: floorTier(type.id).label })}</p>
+        <p class="builder__hint">${interpolate(ui.floorNote, { floor: floorPrize().value, unit })}</p>
       </div>
       ${wheelHtml({ rotation })}
     </div>
@@ -334,75 +221,126 @@ function renderSpinning(rotation, type) {
 }
 
 function spinWheel() {
-  const type = getType(state.preferenceId);
-  const tier = type && pickTier(type.id);
-  if (!type || !tier) return;
-
-  const tiers = tiersFor(type.id);
-  const tierIndex = tiers.findIndex((item) => item.id === tier.id);
-  const slice = 360 / tiers.length;
-  const rotation = (prefersReducedMotion ? 0 : casino.wheel.turns * 360) - (tierIndex + 0.5) * slice;
+  const prize = pickPrize();
+  const index = prizes().findIndex((item) => item.id === prize.id);
+  const slice = 360 / prizes().length;
+  const rotation = (prefersReducedMotion ? 0 : casino.wheel.turns * 360) - (index + 0.5) * slice;
   const duration = prefersReducedMotion ? 80 : casino.wheel.spinDurationMs;
 
-  state.tierId = tier.id;
-  track('wheel_spun', { bonus_type_id: type.id, tier_id: tier.id, tier_value: tier.value });
-  renderSpinning(rotation, type);
+  state.prizeId = prize.id;
+  track('wheel_spun', { prize_id: prize.id, prize_value: prize.value });
+  renderSpinning(rotation);
   announce(casino.ui.spinningAnnouncement);
 
   const revealDelay = prefersReducedMotion ? duration : duration + 80;
-  setTimeout(() => renderReveal(type, tier), revealDelay);
+  setTimeout(() => renderClaim(prize), revealDelay);
 }
 
-function renderReveal(type, tier, restored = false) {
-  state = { step: 'reveal', preferenceId: type.id, tierId: tier.id };
+function formatCardsHtml(prize) {
+  return casino.formats
+    .map((format) => {
+      const selected = format.id === state.formatId;
+      return `
+        <button class="preference${selected ? ' is-selected' : ''}" type="button"
+          data-action="choose-format" data-format-id="${format.id}"
+          aria-pressed="${selected}" style="--choice-color:${format.color}">
+          <span class="preference__mark" aria-hidden="true">${format.mark}</span>
+          <span class="preference__copy">
+            <strong>${format.label}</strong>
+            <small>${format.blurb}</small>
+          </span>
+          <span class="preference__range">${formatReward(prize, format)}</span>
+        </button>
+      `;
+    })
+    .join('');
+}
+
+// The claim screen is the reveal and the CTA in one. The user owns the win
+// before being asked anything, so the choice is a way of collecting rather than
+// a gate in front of the offer.
+function renderClaim(prize, restored = false) {
+  state = { step: 'claim', prizeId: prize.id, formatId: state.formatId };
   const ui = casino.ui;
+  const unit = casino.wheel.unitLabel;
+  const format = getFormat(state.formatId);
 
   els.builder.innerHTML = `
-    <div class="reveal reward-reveal">
-      <p class="step-kicker">${ui.rewardEyebrow}</p>
-      <div class="reward-orbit" aria-hidden="true">
-        <span class="reward-orbit__ring"></span>
-        <span class="reward-orbit__mark">${type.mark}</span>
+    <div class="frame reveal">
+      <p class="step-kicker">${ui.stepClaimKicker}</p>
+      <p class="reveal__label">${ui.wonLabel}</p>
+      <p class="reveal__value">${interpolate(ui.unitSuffix, { value: prize.value, unit })}</p>
+      <h2 class="builder__title claim__title">${ui.claimTitle}</h2>
+      <p class="builder__hint">${ui.claimHint}</p>
+      <div class="preferences" aria-label="${ui.claimTitle}">
+        ${formatCardsHtml(prize)}
       </div>
-      <span class="reveal__tag">${ui.matchedLabel}</span>
-      <p class="reveal__value">${tier.label}</p>
-      <p class="reward-reveal__type">${type.label}</p>
-      <p class="reveal__handoff">${ui.handoffCopy}</p>
-      <a class="cta" id="cta" href="${casino.cta.target}">${casino.cta.label}</a>
+      <p class="reveal__handoff">${
+        format
+          ? interpolate(ui.handoffCopy, { reward: formatReward(prize, format) })
+          : ui.chooseToClaim
+      }</p>
+      <a class="cta" id="cta" href="${casino.cta.target}"
+        ${format ? '' : 'aria-disabled="true" tabindex="-1"'}>${
+          format ? interpolate(casino.cta.label, { format: format.label }) : ui.chooseToClaim
+        }</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
+      ${stepRailHtml(format ? 2 : 1)}
       ${demoNoticeHtml()}
     </div>
   `;
 
-  announce(interpolate(ui.outcomeAnnouncement, { reward: tier.label }));
-
   if (!restored) {
-    track('outcome_revealed', {
-      bonus_type_id: type.id,
-      tier_id: tier.id,
-      reward_value: tier.value,
-      uplift_over_floor: tier.value - floorTier(type.id).value,
-    });
+    announce(interpolate(ui.outcomeAnnouncement, { value: prize.value, unit }));
+    track('outcome_revealed', { prize_id: prize.id, prize_value: prize.value });
   }
 
-  $('cta').addEventListener('click', () => {
+  $('cta').addEventListener('click', (event) => {
+    if (!state.formatId) {
+      event.preventDefault();
+      return;
+    }
     track('cta_clicked', {
-      bonus_type_id: type.id,
-      tier_id: tier.id,
+      prize_id: prize.id,
+      prize_value: prize.value,
+      // The chosen format is the payload. Without it carrying into the handoff
+      // the choice is decoration, and cost per FTD cannot be split by format.
+      format_id: state.formatId,
+      reward: formatReward(prize, getFormat(state.formatId)),
       total_time_ms: Math.round(performance.now() - landingStartedAt),
     });
   });
 
   persist({
     version: STORAGE_VERSION,
-    preferenceId: type.id,
-    tierId: tier.id,
+    prizeId: prize.id,
+    formatId: state.formatId,
     revealedAt: Date.now(),
   });
 
   const revealEl = els.builder.querySelector('.reveal');
   revealEl.setAttribute('tabindex', '-1');
-  revealEl.setAttribute('data-focus-on-unlock', '');
+  if (!restored) revealEl.setAttribute('data-focus-on-unlock', '');
+}
+
+function chooseFormat(formatId) {
+  const format = getFormat(formatId);
+  const prize = getPrize(state.prizeId);
+  if (!format || !prize) return;
+  state.formatId = format.id;
+  track('format_selected', {
+    prize_id: prize.id,
+    format_id: format.id,
+    reward: formatReward(prize, format),
+  });
+  renderClaim(prize, true);
+  els.builder.querySelector('#cta')?.focus();
+  announce(
+    interpolate(casino.ui.formatAnnouncement, {
+      format: format.label,
+      reward: formatReward(prize, format),
+    })
+  );
 }
 
 function persist(outcome) {
@@ -424,18 +362,9 @@ function restoreOutcome() {
 
 function startOver() {
   sessionStorage.removeItem(STORAGE_KEY);
-  state = { step: 'choose', preferenceId: null, tierId: null };
+  state = { step: 'spin', prizeId: null, formatId: null };
   track('flow_restarted', {});
-  renderChoose();
-  els.builder.querySelector('[data-action="choose-preference"]')?.setAttribute('data-focus-on-unlock', '');
-}
-
-// Returning to the choice keeps the previous pick highlighted, so stepping back
-// reads as reversible rather than as losing your place.
-function changeChoice() {
-  track('choice_reopened', { bonus_type_id: state.preferenceId });
-  renderChoose({ back: true });
-  els.builder.querySelector('.preference.is-selected')?.setAttribute('data-focus-on-unlock', '');
+  renderSpin();
 }
 
 function renderError(reason) {
@@ -463,23 +392,21 @@ function onBuilderClick(event) {
   if (!control || control.disabled) return;
 
   const action = control.dataset.action;
-  if (action === 'choose-preference' && state.step === 'choose') {
-    choosePreference(control.dataset.typeId);
-    return;
-  }
 
-  if (action === 'change-choice' && state.step === 'ready') {
-    withLock(280, changeChoice);
-    return;
-  }
-
-  if (action === 'spin-wheel' && state.step === 'ready') {
+  if (action === 'spin-wheel' && state.step === 'spin') {
     const duration = prefersReducedMotion ? 280 : casino.wheel.spinDurationMs + 250;
     withLock(duration, spinWheel);
     return;
   }
 
-  if (action === 'start-over' && state.step === 'reveal') {
+  // Re-picking a format is cheap and reversible, so it is not rate-limited the
+  // way an outcome-producing action is — but it still cannot fire off-frame.
+  if (action === 'choose-format' && state.step === 'claim') {
+    chooseFormat(control.dataset.formatId);
+    return;
+  }
+
+  if (action === 'start-over' && state.step === 'claim') {
     withLock(300, startOver);
     return;
   }
@@ -493,7 +420,7 @@ function onBuilderClick(event) {
 }
 
 window.addEventListener('beforeunload', () => {
-  if (state.step !== 'reveal') {
+  if (state.step !== 'claim') {
     track('flow_abandoned', { last_state: state.step });
   }
 });
@@ -521,18 +448,18 @@ async function boot() {
   await latencyPromise;
 
   const restored = restoreOutcome();
-  const restoredType = restored && getType(restored.preferenceId);
-  const restoredTier = restoredType && findTier(restoredType.id, restored.tierId);
-  const validRestore = restored?.version === STORAGE_VERSION && restoredType && restoredTier;
+  const restoredPrize = restored && getPrize(restored.prizeId);
+  const validRestore = restored?.version === STORAGE_VERSION && restoredPrize;
 
   els.builder.hidden = false;
   if (validRestore) {
-    renderReveal(restoredType, restoredTier, true);
-    track('interaction_blocked', { during_state: 'reveal-restore' });
+    state.formatId = restored.formatId && getFormat(restored.formatId) ? restored.formatId : null;
+    renderClaim(restoredPrize, true);
+    track('interaction_blocked', { during_state: 'claim-restore' });
   } else {
     if (restored) sessionStorage.removeItem(STORAGE_KEY);
-    state = { step: 'choose', preferenceId: null, tierId: null };
-    renderChoose();
+    state = { step: 'spin', prizeId: null, formatId: null };
+    renderSpin();
   }
 
   els.spinnerLayer.hidden = true;

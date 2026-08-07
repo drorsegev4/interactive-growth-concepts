@@ -76,51 +76,59 @@
   },
   "casino": {
     "ui": {
-      "experienceLabel": "Personalised welcome offer",
-      "loading": "Preparing your wheel…",
-      "stepChooseKicker": "1 · Choose",
-      "stepSpinKicker": "2 · Spin",
-      "stepChoose": "Choose your bonus",
-      "chooseHint": "Pick what matters most. Your choice builds the wheel.",
-      "selectedLabel": "{type} selected",
-      "stepSpin": "Your bonus wheel",
-      "spinHint": "{floor} guaranteed. Spin to see how far above.",
-      "floorNote": "You cannot land below {floor}.",
-      "changeChoice": "← Change my choice",
-      "guaranteeNote": "Whatever you pick, the lowest tier is guaranteed. The spin only adds.",
-      "steps": ["Choose", "Spin", "Claim"],
-      "stepSpinning": "Finding your best match…",
-      "spinButton": "Spin my wheel",
-      "spinAriaLabel": "Spin the personalised bonus wheel",
+      "experienceLabel": "Welcome offer",
+      "loading": "Loading your wheel…",
+      "stepSpinKicker": "1 · Spin",
+      "stepClaimKicker": "2 · Take it your way",
+      "stepSpin": "Spin for your welcome bonus",
+      "spinHint": "{floor} {unit} guaranteed. Spin to see how much more.",
+      "floorNote": "You cannot land below {floor} {unit}.",
+      "steps": ["Spin", "Choose", "Claim"],
+      "stepSpinning": "Good luck…",
+      "spinButton": "Spin the wheel",
+      "spinAriaLabel": "Spin the welcome bonus wheel",
       "startOver": "Start over",
       "errorTitle": "Couldn't load this page",
       "errorBody": "Give it another go.",
       "errorRetry": "Retry",
-      "preferenceAnnouncement": "{type} selected. Your wheel now runs from {floor} to {ceiling}.",
       "spinningAnnouncement": "The bonus wheel is spinning.",
-      "outcomeAnnouncement": "Your wheel landed on {reward}.",
-      "rewardEyebrow": "Your welcome package",
-      "matchedLabel": "Matched to your choice",
-      "handoffCopy": "In production, this selected offer carries through to the operator's account flow."
+      "wonLabel": "You won",
+      "unitSuffix": "{value} {unit}",
+      "claimTitle": "Now take it your way",
+      "claimHint": "Same win, three shapes. Pick the one that suits you.",
+      "outcomeAnnouncement": "You won {value} {unit}. Choose how to take it.",
+      "formatAnnouncement": "{format} selected. That is {reward}.",
+      "chooseToClaim": "Pick a format to claim",
+      "rewardEyebrow": "Your welcome offer",
+      "handoffCopy": "In production, your {reward} carries through to the operator's account flow."
     },
     "headlines": {
-      "A": { "headline": "Build your welcome package", "subheadline": "Choose your bonus, then spin." },
-      "B": { "headline": "Your bonus, your call", "subheadline": "Pick what matters most, then reveal your offer." }
+      "A": { "headline": "Spin for your welcome bonus", "subheadline": "Then take it however suits you." },
+      "B": { "headline": "One spin. Your call how to take it.", "subheadline": "Free spins, deposit match or cashback — you decide after you win." }
     },
-    "bonusTypes": [
+    "wheel": {
+      "spinDurationMs": 2400,
+      "turns": 5,
+      "hubLabel": "365",
+      "unitLabel": "credits",
+      "prizes": [
+        { "id": "p-60",  "value": 60,  "label": "60",  "color": "#452a8f", "weight": 7 },
+        { "id": "p-80",  "value": 80,  "label": "80",  "color": "#7d2159", "weight": 6 },
+        { "id": "p-100", "value": 100, "label": "100", "color": "#0b776d", "weight": 5 },
+        { "id": "p-140", "value": 140, "label": "140", "color": "#5c37bd", "weight": 4 },
+        { "id": "p-180", "value": 180, "label": "180", "color": "#a62c76", "weight": 3 },
+        { "id": "p-250", "value": 250, "label": "250", "color": "#1ba294", "weight": 2 }
+      ]
+    },
+    "formats": [
       {
         "id": "spins",
         "label": "Free Spins",
         "mark": "FS",
         "color": "#e95fbd",
         "blurb": "More chances to explore",
-        "rangeTemplate": "{floor}–{ceiling} spins",
-        "tiers": [
-          { "id": "spins-50",  "value": 50,  "label": "50 Spins",  "color": "#7d2159", "weight": 6 },
-          { "id": "spins-100", "value": 100, "label": "100 Spins", "color": "#a62c76", "weight": 5 },
-          { "id": "spins-175", "value": 175, "label": "175 Spins", "color": "#cc3f95", "weight": 3 },
-          { "id": "spins-250", "value": 250, "label": "250 Spins", "color": "#e95fbd", "weight": 2 }
-        ]
+        "perUnit": 1.5,
+        "suffix": " Free Spins"
       },
       {
         "id": "match",
@@ -128,13 +136,8 @@
         "mark": "%",
         "color": "#9b7aef",
         "blurb": "More value from a deposit",
-        "rangeTemplate": "{floor}–{ceiling}% match",
-        "tiers": [
-          { "id": "match-50",  "value": 50,  "label": "50% Match",  "color": "#452a8f", "weight": 6 },
-          { "id": "match-100", "value": 100, "label": "100% Match", "color": "#5c37bd", "weight": 5 },
-          { "id": "match-150", "value": 150, "label": "150% Match", "color": "#7a55dd", "weight": 3 },
-          { "id": "match-200", "value": 200, "label": "200% Match", "color": "#9b7aef", "weight": 2 }
-        ]
+        "perUnit": 1,
+        "suffix": "% Deposit Match"
       },
       {
         "id": "cashback",
@@ -142,20 +145,10 @@
         "mark": "CB",
         "color": "#42c8ba",
         "blurb": "A softer landing",
-        "rangeTemplate": "{floor}–{ceiling}% back",
-        "tiers": [
-          { "id": "cashback-10", "value": 10, "label": "10% Back", "color": "#08544e", "weight": 6 },
-          { "id": "cashback-15", "value": 15, "label": "15% Back", "color": "#0b776d", "weight": 5 },
-          { "id": "cashback-20", "value": 20, "label": "20% Back", "color": "#1ba294", "weight": 3 },
-          { "id": "cashback-25", "value": 25, "label": "25% Back", "color": "#42c8ba", "weight": 2 }
-        ]
+        "perUnit": 0.2,
+        "suffix": "% Cashback"
       }
     ],
-    "wheel": {
-      "spinDurationMs": 2400,
-      "turns": 5,
-      "hubLabel": "365"
-    },
-    "cta": { "label": "Claim my package", "target": "#demo-complete" }
+    "cta": { "label": "Claim my {format}", "target": "#demo-complete" }
   }
 }
