@@ -1,49 +1,78 @@
 @use 'tokens';
+@use 'typography';
 @use 'base';
 @use 'components';
 
+// Casino mechanic only — the preference picker and the bonus wheel.
+// Shell, hero, reveal, buttons and footer all come from _components.scss.
+
+// Sized to the *first* frame, not the tallest one.
+//
+// This reservation exists to stop the card jumping when the 1.5s spinner is
+// replaced by real content — that shift happens at load and does count against
+// CLS. Sizing it to the taller wheel frame instead just left dead space under
+// the choice. Growing when the user advances is fine: shifts within 500ms of a
+// tap are excluded from CLS, and downward growth reads as natural.
 [data-page='casino'] .module {
-  min-height: 570px;
+  min-height: 440px;
   background:
-    radial-gradient(circle at 50% 42%, rgba(232, 178, 60, 0.08), transparent 15rem),
+    radial-gradient(circle at 50% 42%, rgba(244, 201, 93, 0.08), transparent 15rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 32%),
     var(--bg-elevated);
   box-shadow:
-    0 28px 70px rgba(0, 0, 0, 0.38),
+    var(--shadow-3),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.builder {
-  padding: var(--space-4);
+[data-page='casino'] body {
+  background:
+    radial-gradient(circle at 15% 12%, rgba(155, 72, 200, 0.17), transparent 26rem),
+    radial-gradient(circle at 88% 3%, rgba(244, 201, 93, 0.12), transparent 22rem),
+    var(--bg);
 }
 
-.builder__title {
-  margin: 0 0 var(--space-1);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.builder__hint {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--fs-small);
-}
-
-.step-kicker {
-  margin: 0 0 var(--space-1);
-  color: var(--accent);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.wheel-flow {
+// A frame is one step of the flow: choose, then spin. Each frame owns exactly
+// one decision, so the wheel and the primary action are always in view.
+.frame {
   position: relative;
   isolation: isolate;
+  animation: frame-in var(--dur-med) var(--ease-out-expo);
 }
 
-.wheel-flow::before {
+.frame--back {
+  animation-name: frame-in-back;
+}
+
+@keyframes frame-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes frame-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+.frame__back {
+  display: inline-flex;
+  min-height: var(--tap-min);
+  align-items: center;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-small);
+  cursor: pointer;
+}
+
+// Faint dot field behind the flow, masked so it fades at both ends.
+.frame::before {
   position: absolute;
   inset: -16px;
   z-index: -1;
@@ -57,9 +86,9 @@
 
 .wheel-flow__intro {
   margin-bottom: var(--space-3);
-  text-align: left;
 }
 
+// Preference picker
 .preferences {
   position: relative;
   z-index: 3;
@@ -72,19 +101,19 @@
 .preference {
   position: relative;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-3);
   min-width: 0;
   min-height: 64px;
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-3);
-  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
-  cursor: pointer;
+  font-family: inherit;
   text-align: left;
+  cursor: pointer;
+  overflow: hidden;
   transition:
     border-color var(--dur-fast),
     background var(--dur-fast),
@@ -96,7 +125,6 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  height: auto;
   background: var(--choice-color);
   border-radius: var(--radius-md) 0 0 var(--radius-md);
   content: '';
@@ -107,34 +135,51 @@
   display: grid;
   width: 34px;
   height: 34px;
+  flex: 0 0 auto;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--choice-color), white 22%);
   border-radius: 50%;
   background: color-mix(in srgb, var(--choice-color), transparent 74%);
   color: color-mix(in srgb, var(--choice-color), white 25%);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--fw-black);
 }
 
 .preference__copy {
   display: flex;
   min-width: 0;
+  flex: 1;
   flex-direction: column;
   gap: 1px;
-  flex: 1;
 }
 
 .preference__copy strong {
   font-size: var(--fs-body);
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-snug);
 }
 
 .preference__copy small {
-  display: block;
   color: var(--text-muted);
   font-size: var(--fs-small);
-  line-height: 1.2;
+  line-height: var(--leading-snug);
+}
+
+// What the bonus is worth, shown at the moment of choosing rather than after it.
+// Tabular figures so the three ranges align down the column.
+.preference__range {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-snug);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.preference.is-selected .preference__range {
+  color: var(--text);
 }
 
 .preference.is-selected {
@@ -157,28 +202,72 @@
   color: #16091c;
   content: '✓';
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: var(--fw-black);
 }
 
-.wheel-flow__spin {
-  position: relative;
-  z-index: 1;
+// The guarantee belongs on the frame where the decision is made, not only on the
+// frame after it — the moment of choosing is the moment with the least certainty.
+.guarantee-note {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 2px solid color-mix(in srgb, var(--accent), transparent 55%);
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+  line-height: var(--leading-snug);
+}
+
+// Tells the user how short this is. Pre-landers leak people who cannot tell
+// whether they are one step from the offer or eight.
+.step-rail {
   display: flex;
-  width: 100%;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
+.step-rail__item {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--track-snug);
+}
+
+.step-rail__item span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  font-size: 0.6rem;
+}
+
+.step-rail__item:first-child {
+  color: var(--accent);
+}
+
+.step-rail__item:first-child span {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent), transparent 82%);
+}
+
+// Wheel
 .wheel-stage {
   position: relative;
   z-index: 1;
   width: clamp(210px, 66vw, 252px);
   height: auto;
   flex: 0 0 auto;
+  margin: var(--space-2) auto var(--space-4);
   aspect-ratio: 1;
   contain: layout;
-  margin: var(--space-2) auto var(--space-4);
   filter: drop-shadow(0 22px 22px rgba(0, 0, 0, 0.35));
 }
 
@@ -193,7 +282,7 @@
     repeating-conic-gradient(from 0deg, #f8dc83 0deg 2.5deg, #9a6a22 2.5deg 5deg),
     #a87525;
   box-shadow:
-    inset 0 0 0 4px #2a1236,
+    inset 0 0 0 4px var(--surface),
     0 0 0 3px rgba(244, 201, 93, 0.16),
     0 0 44px rgba(244, 201, 93, 0.12);
 }
@@ -211,8 +300,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
   border-radius: 50%;
+  overflow: hidden;
   transform: rotate(0deg);
   transition: transform var(--spin-duration) cubic-bezier(0.12, 0.72, 0.08, 1);
   will-change: transform;
@@ -222,40 +311,100 @@
   transform: rotate(var(--wheel-rotation));
 }
 
+// Gloss + rim highlight, plus a hairline divider on every segment boundary so
+// the slices stay legible once neighbouring colours are dimmed.
 .wheel__disc::after {
   position: absolute;
   inset: 0;
   background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 255, 255, 0.28) 0 0.4deg,
+      transparent 0.4deg var(--segment-slice, 60deg)
+    ),
     radial-gradient(circle, transparent 0 54%, rgba(255, 255, 255, 0.14) 55%, transparent 56%),
     linear-gradient(125deg, rgba(255, 255, 255, 0.2), transparent 34% 68%, rgba(0, 0, 0, 0.12));
   content: '';
   pointer-events: none;
 }
 
+// Radial label geometry.
+//
+// Two coordinate systems disagree here and getting them confused is what broke
+// this: conic-gradient measures from 12 o'clock, CSS rotate() measures from
+// 3 o'clock. The -90deg reconciles them so a label sits on its own segment
+// rather than on the boundary between two.
+//
+// The box spans 16%..43% of the stage width from the centre, which at the
+// 252px size is a radius band of 40px..108px — outside the 29px hub and inside
+// the 118px clip edge, so nothing collides and nothing is cut off.
 .wheel__label {
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 1;
   display: flex;
-  width: 46%;
+  width: 43%;
   height: 26px;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 8%;
+  padding-right: 4%;
+  padding-left: 16%;
   color: #fff;
   font-size: clamp(0.58rem, 2.5vw, 0.72rem);
-  font-weight: 800;
+  font-weight: var(--fw-black);
   line-height: 1;
-  text-align: right;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  transform: translateY(-50%) rotate(var(--segment-angle)) translateX(5%);
+  transform: translateY(-50%) rotate(calc(var(--segment-angle) - 90deg));
   transform-origin: 0 50%;
+  transition: opacity var(--dur-med);
 }
 
 .wheel__label span {
   display: block;
-  max-width: 72px;
+  white-space: nowrap;
+}
+
+// Labels past the halfway point would otherwise read upside-down. Rotating the
+// span rather than the box flips the glyphs while leaving the label in its slot.
+.wheel__label[data-flip='true'] span {
+  transform: rotate(180deg);
+}
+
+// Choosing rebuilds the wheel out of that bonus's own tiers. That transformation
+// is the reward for choosing, so it gets a beat of its own rather than swapping
+// silently.
+.wheel-stage.is-rebuilding {
+  animation: wheel-rebuild 520ms var(--ease-out-expo);
+}
+
+@keyframes wheel-rebuild {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.9) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+// The guaranteed floor is stated before the spin, not discovered after it, so it
+// gets real prominence rather than being a footnote under the wheel.
+.wheel-flow__floor {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 70%);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+  color: var(--accent);
+  font-size: var(--fs-small);
+  font-weight: var(--fw-bold);
+  text-align: center;
 }
 
 .wheel__hub {
@@ -273,8 +422,9 @@
     0 6px 16px rgba(0, 0, 0, 0.42),
     inset 0 1px 1px rgba(255, 255, 255, 0.65);
   color: #3b2100;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-black);
+  letter-spacing: var(--track-tight);
   transform: translate(-50%, -50%);
 }
 
@@ -285,7 +435,6 @@
   z-index: 4;
   width: 0;
   height: 0;
-  border-top: 0;
   border-right: 13px solid transparent;
   border-bottom: 28px solid #fff0b6;
   border-left: 13px solid transparent;
@@ -310,27 +459,26 @@
 }
 
 @keyframes cta-sheen {
-  55%, 100% {
+  55%,
+  100% {
     transform: translateX(120%);
   }
 }
 
-.wheel-flow--spinning {
+.frame--spinning {
   display: flex;
-  min-height: 520px;
+  min-height: 420px;
   flex-direction: column;
   justify-content: center;
+  text-align: center;
 }
 
-.wheel-flow--spinning .wheel-stage {
+.frame--spinning .wheel-stage {
   width: clamp(230px, 72vw, 286px);
   margin-top: var(--space-5);
 }
 
-.reveal {
-  text-align: center;
-}
-
+// Reveal ornament
 .reward-reveal {
   padding: var(--space-4) 0 0;
 }
@@ -375,7 +523,7 @@
   z-index: 1;
   color: #3a2000;
   font-size: 1.3rem;
-  font-weight: 800;
+  font-weight: var(--fw-black);
 }
 
 @keyframes orbit-pulse {
@@ -383,74 +531,17 @@
     opacity: 0.8;
     transform: scale(0.82);
   }
-  70%, 100% {
+  70%,
+  100% {
     opacity: 0;
     transform: scale(1.12);
   }
 }
 
-.reveal__tag {
-  display: inline-block;
-  margin-bottom: var(--space-2);
-  padding: 5px var(--space-3);
-  border: 1px solid rgba(244, 201, 93, 0.36);
-  border-radius: 999px;
-  background: rgba(244, 201, 93, 0.1);
-  color: #ffe7a3;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.reward-reveal__value {
-  margin: 0;
-  color: var(--accent);
-  font-size: clamp(2.2rem, 10vw, 3rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1;
-  text-shadow: 0 10px 32px rgba(244, 201, 93, 0.15);
-}
-
 .reward-reveal__type {
   margin: var(--space-2) 0 var(--space-4);
   color: var(--text);
-  font-weight: 700;
-}
-
-.reveal__handoff {
-  max-width: 340px;
-  margin-right: auto;
-  margin-bottom: var(--space-4);
-  margin-left: auto;
-}
-
-.start-over {
-  margin-top: var(--space-3);
-}
-
-.retry-btn {
-  margin-top: var(--space-3);
-}
-
-.error-state {
-  padding: var(--space-6) var(--space-4);
-}
-
-.error-state p {
-  color: var(--text-muted);
-}
-
-.demo-notice {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: var(--fs-small);
-  text-align: left;
+  font-weight: var(--fw-bold);
 }
 
 @media (hover: hover) {
@@ -458,11 +549,9 @@
     border-color: color-mix(in srgb, var(--choice-color), white 18%);
     background: var(--surface-bright);
   }
-}
 
-@media (min-width: 390px) {
-  .preference {
-    min-height: 68px;
+  .frame__back:hover {
+    color: var(--text);
   }
 }
 
@@ -493,7 +582,8 @@
 @media (prefers-reduced-motion: reduce) {
   .spin-cta:not(:disabled)::after,
   .reward-orbit::before,
-  .reward-orbit::after {
+  .reward-orbit::after,
+  .wheel-stage.is-rebuilding {
     animation: none;
   }
 

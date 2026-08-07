@@ -1,214 +1,210 @@
 @use 'tokens';
+@use 'typography';
 @use 'base';
 @use 'components';
 
-.builder {
-  padding: var(--space-4);
+// Sports mechanic only — the goalmouth stage.
+// Shell, hero, reveal, buttons and footer all come from _components.scss.
+//
+// The stage is deliberately one persistent element across aim and shoot. The
+// previous build destroyed the aim UI and swapped in a separate shot view,
+// which threw away the anticipation beat at exactly the moment it mattered.
+//
+// Geometry is entirely config-driven. JS sets these from config.json:
+//   --grid-cols / --grid-rows   the goal division
+//   --target-x / --target-y     centre of the configured zone, in %
+//   --sweet-left / --sweet-w    the timing tolerance band, in %
+//   --reticle-x                 the sweeping marker, in %
+
+[data-page='sports'] .module {
+  min-height: 460px;
 }
 
-.builder__title {
-  margin: 0 0 var(--space-3);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-// Aiming — sweep track
-.sweep-wrap {
-  padding: var(--space-2) 0;
-}
-
-.sweep-track {
+.pitch {
   position: relative;
-  height: 16px;
-  border-radius: 999px;
-  background: var(--border);
-  margin: var(--space-4) 0;
-  cursor: pointer;
-  touch-action: manipulation;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(51, 255, 153, 0.07), transparent 55%),
+    radial-gradient(ellipse 120% 60% at 50% 108%, rgba(51, 255, 153, 0.12), transparent 70%),
+    var(--bg);
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  contain: layout;
 }
 
-.sweep-track__sweet {
+// Goal frame: crossbar and posts drawn as borders, net as a woven pattern.
+.goal {
   position: absolute;
+  inset: 8% 7% 22%;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 13px, rgba(255, 255, 255, 0.07) 13px 14px),
+    repeating-linear-gradient(90deg, transparent 0 13px, rgba(255, 255, 255, 0.07) 13px 14px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.12);
+}
+
+// The cell the player is aiming at — quiet, it frames rather than competes.
+.goal__zone {
+  position: absolute;
+  left: var(--zone-left);
+  top: var(--zone-top);
+  width: var(--zone-w);
+  height: var(--zone-h);
+  border: 1px dashed color-mix(in srgb, var(--target), transparent 55%);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--target), transparent 94%);
+}
+
+.goal__zone-label {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  color: var(--target);
+  font-size: 0.6rem;
+  font-weight: var(--fw-black);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  opacity: 0.75;
+}
+
+// The scoring band. This is the affordance the hint refers to.
+.goal__sweet {
+  position: absolute;
+  left: var(--sweet-left);
+  top: var(--zone-top);
+  width: var(--sweet-w);
+  height: var(--zone-h);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--target), transparent 58%),
+    color-mix(in srgb, var(--target), transparent 82%)
+  );
+  box-shadow: 0 0 18px color-mix(in srgb, var(--target), transparent 62%);
+}
+
+// Sweeping marker. Position is written by rAF as a percentage.
+.goal__reticle {
+  position: absolute;
+  left: var(--reticle-x, 50%);
   top: 0;
   bottom: 0;
-  border-radius: 999px;
-  background: rgba(51, 255, 153, 0.35);
+  width: 3px;
+  margin-left: -1.5px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--accent) 12%,
+    var(--accent) 88%,
+    transparent
+  );
+  box-shadow: 0 0 12px var(--accent);
+  will-change: left;
 }
 
-.sweep-track__marker {
+.goal__reticle::after {
   position: absolute;
-  top: 50%;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  margin-left: -10px;
-  border-radius: 50%;
-  background: var(--accent);
-  transform: translate(0, -50%);
-  will-change: transform;
-}
-
-// Shooting — ball flight
-.shot-stage {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  border: 3px solid var(--border);
-  overflow: hidden;
-}
-
-.shot-stage__ball {
-  position: absolute;
-  bottom: 6%;
   left: 50%;
-  width: 16px;
-  height: 16px;
+  top: var(--target-y);
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--accent);
   border-radius: 50%;
-  background: var(--white);
-  transform: translate(-50%, 0);
-  transition: transform 700ms var(--ease-out-expo), opacity 700ms;
+  background: color-mix(in srgb, var(--accent), transparent 78%);
+  content: '';
+  transform: translate(-50%, -50%);
 }
 
-.shot-stage__ball.is-flying {
-  opacity: 0;
+.pitch.is-stopped .goal__reticle {
+  transition: none;
 }
 
-// Reveal
-.reveal {
-  text-align: center;
-}
-
-.reveal__tier {
-  display: inline-block;
-  margin-bottom: var(--space-2);
-  padding: 4px var(--space-3);
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: var(--fs-small);
-  font-weight: 800;
-}
-
-.reveal__line {
-  margin: var(--space-2) 0;
-  font-size: var(--fs-sub);
-  color: var(--text-muted);
-}
-
-.reveal__odds-label {
-  margin: 0;
-  font-size: var(--fs-small);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.reveal__odds {
-  font-size: clamp(2.2rem, 10vw, 3rem);
-  font-weight: 800;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-  margin: var(--space-2) 0;
-}
-
-.demo-notice {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  border: 1px dashed var(--border);
-  font-size: var(--fs-small);
-  color: var(--text-muted);
-  text-align: left;
-}
-
-.skip-link {
-  display: block;
-  margin: var(--space-3) auto 0;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  text-decoration: underline;
-  font-size: var(--fs-small);
-  cursor: pointer;
-}
-
-.start-over {
-  margin-top: var(--space-3);
-}
-
-.retry-btn {
-  margin-top: var(--space-3);
-}
-
-.shot-stage {
-  background:
-    linear-gradient(180deg, rgba(51, 255, 153, 0.06), transparent 60%),
-    repeating-linear-gradient(0deg, transparent 0 15px, rgba(255, 255, 255, 0.045) 15px 16px),
-    repeating-linear-gradient(90deg, transparent 0 15px, rgba(255, 255, 255, 0.045) 15px 16px),
-    var(--bg);
-}
-
-.shot-stage__ball {
+.pitch__ball {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   background:
     radial-gradient(circle at 50% 12%, #111 0 2px, transparent 2.5px),
     radial-gradient(circle at 20% 57%, #111 0 2px, transparent 2.5px),
     radial-gradient(circle at 80% 57%, #111 0 2px, transparent 2.5px),
     #fff;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, 0);
 }
 
-.fixture-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px var(--space-3);
-  margin-bottom: var(--space-5);
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+// Net ripple on impact — feedback, not decoration.
+.goal.is-hit {
+  animation: net-ripple 420ms var(--ease-out-expo);
 }
 
-.fixture-card__competition {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+@keyframes net-ripple {
+  40% {
+    box-shadow: 0 0 44px color-mix(in srgb, var(--target), transparent 30%);
+  }
 }
 
-.fixture-card__teams {
-  font-size: 1.05rem;
-}
-
-.fixture-card__market {
-  color: var(--text-muted);
-  font-size: var(--fs-small);
-}
-
-.fixture-card__up-to {
-  grid-column: 2;
-  grid-row: 2 / 4;
-  align-self: center;
-  color: var(--accent);
-  font-size: 1.05rem;
-  font-weight: 800;
-}
-
+// Tolerance scale beneath the goal.
 .sweep-labels {
   display: flex;
   justify-content: space-between;
   gap: var(--space-2);
   color: var(--text-muted);
   font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.sweep-labels strong {
-  color: var(--accent);
+// Team red and Chelsea blue both fail AA on these darks, so the accessible
+// tint carries the text and the true brand colour is left to fills only.
+.sweep-labels strong,
+.context-card__value {
+  color: var(--team-on-dark);
 }
 
-.fixture-card + .builder__title {
-  margin-bottom: var(--space-1);
+.context-card__crest {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: var(--team);
+  vertical-align: baseline;
+}
+
+.tap-hint {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-small);
+  text-align: center;
+}
+
+@media (max-width: 350px) {
+  [data-page='sports'] .page {
+    padding-right: var(--space-3);
+    padding-left: var(--space-3);
+  }
+
+  .builder {
+    padding: var(--space-3);
+  }
+
+  .goal__zone-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goal.is-hit {
+    animation: none;
+  }
 }

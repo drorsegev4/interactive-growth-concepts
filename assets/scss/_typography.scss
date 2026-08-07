@@ -1,0 +1,89 @@
+// Type system — one self-hosted variable family, expressed two ways.
+//
+// Manrope ships as a latin-subset variable woff2 (24.8 KB, OFL) from /assets/fonts.
+// The url is root-absolute on purpose: the compiled CSS is inlined into a <style>
+// block in pages at two different depths (/sports/, /casino/), and a relative url()
+// inside inline CSS resolves against the *document*, not the stylesheet — so a
+// relative path would break on one of them.
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('/assets/fonts/manrope-latin-var.woff2') format('woff2');
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+// Metric-matched fallback, so the swap from system text to Manrope moves nothing
+// and CLS stays at 0. Values are measured, not guessed: Manrope renders at
+// ascent 1.07em / descent 0.30em and is 2.19% wider than the local system stack
+// for the same string, so the fallback is scaled up to meet it and its ascent and
+// descent are then restated relative to that adjusted em.
+@font-face {
+  font-family: 'Manrope Fallback';
+  src:
+    local('Segoe UI'),
+    local('Roboto'),
+    local('Helvetica Neue'),
+    local('Arial');
+  size-adjust: 102.19%;
+  ascent-override: 104.71%;
+  descent-override: 29.36%;
+  line-gap-override: 0%;
+}
+
+:root {
+  --font-sans: 'Manrope', 'Manrope Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+
+  // Fluid scale, mobile-first.
+  --fs-display: clamp(2.4rem, 11vw, 3.4rem); // reveal numerals — the peak moment
+  --fs-headline: clamp(1.7rem, 5.5vw + 0.4rem, 2.35rem);
+  --fs-title: 1.15rem; // step titles
+  --fs-sub: clamp(1rem, 2vw + 0.4rem, 1.125rem);
+  --fs-body: 1rem;
+  --fs-small: 0.85rem;
+  --fs-micro: 0.72rem; // kickers, wheel labels, meta
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-bold: 700;
+  --fw-black: 800;
+
+  --track-tight: -0.03em;
+  --track-snug: -0.015em;
+  --track-normal: 0;
+  --track-wide: 0.08em;
+  --track-widest: 0.13em;
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-body: 1.5;
+
+  // Per-vertical expression. Both skins use the same family; they differ by
+  // weight, tracking and case rather than by a second typeface.
+  --headline-weight: var(--fw-black);
+  --headline-track: var(--track-tight);
+  --kicker-track: var(--track-wide);
+}
+
+// Sports: athletic and punchy — maximum weight, tightest tracking.
+[data-page='sports'] {
+  --headline-weight: var(--fw-black);
+  --headline-track: var(--track-tight);
+  --kicker-track: var(--track-widest);
+}
+
+// Casino: premium and composed — a touch more air in the display sizes.
+[data-page='casino'] {
+  --headline-weight: var(--fw-bold);
+  --headline-track: var(--track-snug);
+  --kicker-track: var(--track-wide);
+}
+
+// Any numeral that animates or is compared across states must be tabular.
+// Manrope's proportional digits are dramatically uneven ("1111" measures 62px
+// against 98px for "0000" at the same size), so a count-up without this jitters.
+.u-tnum {
+  font-variant-numeric: tabular-nums;
+}

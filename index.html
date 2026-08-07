@@ -3,36 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#0b0710">
 <link rel="icon" href="data:,">
-<title>Entain — Interactive Acquisition Concepts</title>
+<title>Interactive Acquisition Concepts</title>
 <meta name="description" content="Two mobile-first interactive acquisition concepts for Sports and Casino.">
 <meta property="og:title" content="Interactive Growth Concepts">
 <meta property="og:description" content="Two mobile-first interactive acquisition concepts for Sports and Casino.">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://drorsegev4.github.io/interactive-growth-concepts/assets/og.png">
+<meta property="og:image" content="https://interactive-growth-concepts.vercel.app/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/assets/fonts/manrope-latin-var.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  @font-face{font-family:'Manrope';src:url('/assets/fonts/manrope-latin-var.woff2') format('woff2');font-weight:400 800;font-display:swap}
+  @font-face{font-family:'Manrope Fallback';src:local('Segoe UI'),local('Roboto'),local('Helvetica Neue'),local('Arial');size-adjust:102.19%;ascent-override:104.71%;descent-override:29.36%;line-gap-override:0%}
   *,*::before,*::after{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#0b0710;color:#f7f2fa;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-  .hub{max-width:420px;width:100%;text-align:center}
-  h1{font-size:clamp(1.5rem,6vw,2rem);margin:0 0 8px}
-  p{color:#b9a4c4;margin:0 0 32px}
-  .links{display:flex;flex-direction:column;gap:16px}
-  a{display:block;padding:20px;border-radius:14px;text-decoration:none;font-weight:800;font-size:1.1rem;min-height:44px}
-  .sports{background:#33ff99;color:#06130c}
-  .casino{background:#e8b23c;color:#241300}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    font-family:'Manrope','Manrope Fallback',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(circle at 18% 8%,rgba(155,72,200,.16),transparent 26rem),radial-gradient(circle at 86% 4%,rgba(51,255,153,.10),transparent 24rem),#0b0710;
+    color:#f7f2fa;-webkit-font-smoothing:antialiased}
+  .hub{max-width:420px;width:100%}
+  .eyebrow{margin:0 0 8px;color:#c1abc9;font-size:.72rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+  h1{margin:0 0 8px;font-size:clamp(1.6rem,6vw,2.1rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;text-wrap:balance}
+  p.lede{color:#b9a4c4;margin:0 0 32px;line-height:1.5}
+  .links{display:flex;flex-direction:column;gap:14px}
+  a.card{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:18px 20px;
+    border:1px solid #2c2036;border-radius:16px;text-decoration:none;color:inherit;background:#170c1f;
+    transition:border-color .18s,transform .18s cubic-bezier(.16,1,.3,1)}
+  a.card:active{transform:scale(.99)}
+  a.card b{display:block;font-size:1.05rem;font-weight:800;letter-spacing:-.015em}
+  a.card span{display:block;color:#b9a4c4;font-size:.85rem;font-weight:400}
+  a.card i{width:9px;height:9px;border-radius:50%;flex:0 0 auto;font-style:normal}
+  .sports i{background:#33ff99;box-shadow:0 0 14px #33ff99}
+  .casino i{background:#f4c95d;box-shadow:0 0 14px #f4c95d}
+  .sports:hover{border-color:#33ff99}
+  .casino:hover{border-color:#f4c95d}
+  :focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+  footer{margin-top:32px;padding-top:20px;border-top:1px solid #2c2036;color:#8f7f99;font-size:.8rem;line-height:1.5}
+  @media(prefers-reduced-motion:reduce){a.card{transition:none}}
 </style>
 </head>
 <body>
 <main class="hub">
-  <h1>Entain Interactive Concepts</h1>
-  <p>Two mobile-first acquisition experiences.</p>
+  <p class="eyebrow">Portfolio demo</p>
+  <h1>Interactive acquisition concepts</h1>
+  <p class="lede">Two mobile-first pre-landing experiences, built on one design system.</p>
   <div class="links">
-    <a class="sports" href="./sports/">Sports — Take the Shot</a>
-    <a class="casino" href="./casino/">Casino — Build Your Bonus</a>
+    <a class="card sports" href="./sports/">
+      <span><b>Sports — Take the Shot</b><span>Time one shot for an odds boost</span></span>
+      <i aria-hidden="true"></i>
+    </a>
+    <a class="card casino" href="./casino/">
+      <span><b>Casino — Build Your Bonus</b><span>Pick your bonus, then spin for it</span></span>
+      <i aria-hidden="true"></i>
+    </a>
   </div>
+  <footer>18+ · Demo only. No real money, no real offer, not affiliated with any operator.</footer>
 </main>
 </body>
 </html>

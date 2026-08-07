@@ -1,7 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "global": {
     "brand": "365Scores",
+    "brandShort": "365",
     "loadingDurationMs": 1500,
     "backLabel": "Explore both concepts"
   },
@@ -21,32 +22,35 @@
     "ui": {
       "competitionLabel": "{competition} - interactive odds boost",
       "loading": "Warming up…",
+      "stepAimKicker": "1 · Aim",
+      "stepShootKicker": "2 · Shoot",
       "stepAim": "Take the shot",
-      "aimHint": "Tap when the marker is in the bright zone.",
+      "aimHint": "Stop the sweeping line inside the bright band.",
+      "tapHint": "Tap anywhere on the goal to shoot.",
       "skipShot": "Skip the shot — take the standard offer",
       "startOver": "Start over",
       "floorLabel": "Your offer",
       "boostedLabel": "Your boosted offer",
       "errorTitle": "Couldn't load this page",
       "fixtureSeparator": "vs",
-      "upToLabel": "Up to \u00d7{maxMultiplier}",
-      "floorMarkerLabel": "\u00d7{floorMultiplier} floor",
-      "maxMarkerLabel": "\u00d7{maxMultiplier} max",
+      "upToLabel": "Up to ×{maxMultiplier}",
+      "floorMarkerLabel": "×{floorMultiplier} floor",
+      "maxMarkerLabel": "×{maxMultiplier} max",
       "errorBody": "Give it another go.",
       "errorRetry": "Retry",
       "outcomeAnnouncement": "{outcome} Boosted odds {odds}.",
       "handoffCopy": "In production, your boosted odds of {boostedOdds} carry through to the operator's betslip or account flow.",
-      "timingAriaLabel": "Stop the moving marker in the highlighted zone"
+      "timingAriaLabel": "Stop the sweeping marker inside the bright band to boost your odds"
     },
     "headlines": {
       "A": { "headline": "Boost your odds up to ×{maxMultiplier}", "subheadline": "One tap. Time it right." },
-      "B": { "headline": "Time it. Take the shot.", "subheadline": "Stop the marker in the bright zone for the biggest boost." }
+      "B": { "headline": "Time it. Take the shot.", "subheadline": "Stop the marker in the bright band for the biggest boost." }
     },
     "fixture": {
       "id": "fx-1",
       "competition": "Premier League",
-      "home": { "name": "Arsenal", "short": "ARS", "colour": "#EF0107", "onColour": "#FFFFFF" },
-      "away": { "name": "Chelsea", "short": "CHE", "colour": "#034694", "onColour": "#FFFFFF" }
+      "home": { "name": "Arsenal", "short": "ARS", "colour": "#EF0107", "onColour": "#FFFFFF", "onDark": "#FF6B6B" },
+      "away": { "name": "Chelsea", "short": "CHE", "colour": "#034694", "onColour": "#FFFFFF", "onDark": "#6FA8FF" }
     },
     "market": { "label": "{team} to win", "homeOdds": 2.10, "awayOdds": 3.20 },
     "featuredTeamId": "home",
@@ -74,11 +78,17 @@
     "ui": {
       "experienceLabel": "Personalised welcome offer",
       "loading": "Preparing your wheel…",
+      "stepChooseKicker": "1 · Choose",
+      "stepSpinKicker": "2 · Spin",
       "stepChoose": "Choose your bonus",
-      "chooseHint": "Pick what matters most, then spin.",
+      "chooseHint": "Pick what matters most. Your choice builds the wheel.",
       "selectedLabel": "{type} selected",
       "stepSpin": "Your bonus wheel",
-      "spinHint": "One spin. A guaranteed {type} reward.",
+      "spinHint": "{floor} guaranteed. Spin to see how far above.",
+      "floorNote": "You cannot land below {floor}.",
+      "changeChoice": "← Change my choice",
+      "guaranteeNote": "Whatever you pick, the lowest tier is guaranteed. The spin only adds.",
+      "steps": ["Choose", "Spin", "Claim"],
       "stepSpinning": "Finding your best match…",
       "spinButton": "Spin my wheel",
       "spinAriaLabel": "Spin the personalised bonus wheel",
@@ -86,7 +96,7 @@
       "errorTitle": "Couldn't load this page",
       "errorBody": "Give it another go.",
       "errorRetry": "Retry",
-      "preferenceAnnouncement": "{type} selected. Your personalised wheel is ready.",
+      "preferenceAnnouncement": "{type} selected. Your wheel now runs from {floor} to {ceiling}.",
       "spinningAnnouncement": "The bonus wheel is spinning.",
       "outcomeAnnouncement": "Your wheel landed on {reward}.",
       "rewardEyebrow": "Your welcome package",
@@ -98,22 +108,54 @@
       "B": { "headline": "Your bonus, your call", "subheadline": "Pick what matters most, then reveal your offer." }
     },
     "bonusTypes": [
-      { "id": "spins", "label": "Free Spins", "mark": "FS", "color": "#e95fbd", "blurb": "More chances to explore" },
-      { "id": "match", "label": "Deposit Match", "mark": "%", "color": "#9b7aef", "blurb": "More value from a deposit" },
-      { "id": "cashback", "label": "Cashback", "mark": "CB", "color": "#42c8ba", "blurb": "A softer landing" }
+      {
+        "id": "spins",
+        "label": "Free Spins",
+        "mark": "FS",
+        "color": "#e95fbd",
+        "blurb": "More chances to explore",
+        "rangeTemplate": "{floor}–{ceiling} spins",
+        "tiers": [
+          { "id": "spins-50",  "value": 50,  "label": "50 Spins",  "color": "#7d2159", "weight": 6 },
+          { "id": "spins-100", "value": 100, "label": "100 Spins", "color": "#a62c76", "weight": 5 },
+          { "id": "spins-175", "value": 175, "label": "175 Spins", "color": "#cc3f95", "weight": 3 },
+          { "id": "spins-250", "value": 250, "label": "250 Spins", "color": "#e95fbd", "weight": 2 }
+        ]
+      },
+      {
+        "id": "match",
+        "label": "Deposit Match",
+        "mark": "%",
+        "color": "#9b7aef",
+        "blurb": "More value from a deposit",
+        "rangeTemplate": "{floor}–{ceiling}% match",
+        "tiers": [
+          { "id": "match-50",  "value": 50,  "label": "50% Match",  "color": "#452a8f", "weight": 6 },
+          { "id": "match-100", "value": 100, "label": "100% Match", "color": "#5c37bd", "weight": 5 },
+          { "id": "match-150", "value": 150, "label": "150% Match", "color": "#7a55dd", "weight": 3 },
+          { "id": "match-200", "value": 200, "label": "200% Match", "color": "#9b7aef", "weight": 2 }
+        ]
+      },
+      {
+        "id": "cashback",
+        "label": "Cashback",
+        "mark": "CB",
+        "color": "#42c8ba",
+        "blurb": "A softer landing",
+        "rangeTemplate": "{floor}–{ceiling}% back",
+        "tiers": [
+          { "id": "cashback-10", "value": 10, "label": "10% Back", "color": "#08544e", "weight": 6 },
+          { "id": "cashback-15", "value": 15, "label": "15% Back", "color": "#0b776d", "weight": 5 },
+          { "id": "cashback-20", "value": 20, "label": "20% Back", "color": "#1ba294", "weight": 3 },
+          { "id": "cashback-25", "value": 25, "label": "25% Back", "color": "#42c8ba", "weight": 2 }
+        ]
+      }
     ],
     "wheel": {
       "spinDurationMs": 2400,
       "turns": 5,
-      "segments": [
-        { "id": "spins-50", "typeId": "spins", "value": 50, "label": "50 Spins", "color": "#b83280" },
-        { "id": "match-80", "typeId": "match", "value": 80, "label": "80% Match", "color": "#6842c2" },
-        { "id": "cashback-16", "typeId": "cashback", "value": 16, "label": "16% Back", "color": "#087a70" },
-        { "id": "spins-75", "typeId": "spins", "value": 75, "label": "75 Spins", "color": "#8f2665" },
-        { "id": "match-120", "typeId": "match", "value": 120, "label": "120% Match", "color": "#4e2c9e" },
-        { "id": "cashback-24", "typeId": "cashback", "value": 24, "label": "24% Back", "color": "#075e58" }
-      ]
+      "hubLabel": "365"
     },
-    "cta": { "label": "Claim your package", "target": "#demo-complete" }
+    "cta": { "label": "Claim my package", "target": "#demo-complete" }
   }
 }

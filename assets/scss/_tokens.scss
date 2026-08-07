@@ -1,16 +1,12 @@
-// Design tokens shared by both skins.
+// Design tokens — the single source of truth for both skins.
+//
+// Type tokens live in _typography.scss. Everything else is here so the two
+// verticals sit side by side and stay comparable; neither skin may redeclare
+// its palette in its own file.
 
 :root {
-  // Shared neutrals
   --white: #ffffff;
   --focus-ring: #ffd166;
-
-  // Type scale (fluid)
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --fs-headline: clamp(1.75rem, 6vw + 0.5rem, 2.5rem);
-  --fs-sub: clamp(1rem, 2.5vw + 0.4rem, 1.15rem);
-  --fs-body: 1rem;
-  --fs-small: 0.85rem;
 
   // Spacing
   --space-1: 4px;
@@ -25,6 +21,7 @@
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
+  --radius-pill: 999px;
 
   // Easing
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -37,30 +34,54 @@
 
   // Tap target minimum
   --tap-min: 44px;
+
+  // Elevation — replaces the ad-hoc rgba() shadows both files used to carry.
+  --shadow-1: 0 4px 14px rgba(0, 0, 0, 0.24);
+  --shadow-2: 0 12px 32px rgba(0, 0, 0, 0.3);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.38);
 }
 
-// Sports skin — dark navy/charcoal, electric green accent
-[data-page="sports"] {
+// Sports skin — deep navy, electric green action colour.
+[data-page='sports'] {
   --bg: #0b1220;
   --bg-elevated: #121b2e;
   --surface: #182338;
+  --surface-bright: #21304b;
   --text: #f2f5fa;
   --text-muted: #97a4bc;
   --accent: #33ff99;
   --accent-contrast: #06130c;
   --border: #26324a;
   --glow: rgba(51, 255, 153, 0.12);
+
+  // Team colours are supplied per fixture from config.json at runtime.
+  //
+  // --team is the true brand colour and is only ever used as a fill, border or
+  // badge background. --team-on-dark is an accessible tint of the same hue for
+  // *text*, because the real brand colours do not pass AA on these darks:
+  // Arsenal #EF0107 measures 3.50:1 on --surface and Chelsea #034694 just 1.73:1.
+  //
+  // Critically, --accent is NOT overridden by the team colour. The moving marker
+  // and the target zone both stay --accent, so the two halves of the mechanic
+  // share one colour language instead of clashing red-against-green.
+  --team: #ef0107;
+  --team-on-dark: #ff6b6b;
+
+  // The zone the player is aiming at.
+  --target: var(--accent);
+  --target-soft: rgba(51, 255, 153, 0.32);
 }
 
-// Casino skin — deep aubergine/black, warm gold accent
-[data-page="casino"] {
-  --bg: #17091d;
-  --bg-elevated: #200d29;
-  --surface: #291233;
-  --text: #f7f2fa;
-  --text-muted: #b9a4c4;
-  --accent: #e8b23c;
-  --accent-contrast: #241300;
-  --border: #3c1f47;
-  --glow: rgba(232, 178, 60, 0.12);
+// Casino skin — deep aubergine, warm gold action colour.
+[data-page='casino'] {
+  --bg: #120718;
+  --bg-elevated: #1d0b27;
+  --surface: #2a1236;
+  --surface-bright: #371746;
+  --text: #fff9ff;
+  --text-muted: #c1abc9;
+  --accent: #f4c95d;
+  --accent-contrast: #281700;
+  --border: #4a2856;
+  --glow: rgba(244, 201, 93, 0.16);
 }

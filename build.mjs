@@ -52,7 +52,7 @@ for (const file of ['index.html', 'config.json']) {
 for (const directory of ['sports', 'casino']) {
   cpSync(path.join(root, directory), path.join(client, directory), { recursive: true });
 }
-for (const directory of ['css', 'js']) {
+for (const directory of ['css', 'js', 'fonts']) {
   cpSync(path.join(root, 'assets', directory), path.join(client, 'assets', directory), { recursive: true });
 }
 cpSync(path.join(root, 'assets', 'og.png'), path.join(client, 'assets', 'og.png'));
