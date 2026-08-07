@@ -7,3 +7,7 @@ dist/
 .vercel/
 .env.local
 .env.*.local
+
+# Local QA record and evidence — not published
+TESTING.md
+docs/evidence/
