@@ -8,14 +8,10 @@
   },
   "compliance": {
     "ageRating": "18+",
-    "termsShort": "Demo only. No real money, no real offer.",
+    "termsShort": "Portfolio demo. No real money, no real offer, not affiliated with any operator.",
     "rgMessage": "Take time to think. Set your limits.",
     "rgLabel": "BeGambleAware.org",
     "rgUrl": "https://www.begambleaware.org"
-  },
-  "demoNotice": {
-    "title": "This is a portfolio demo",
-    "body": "No real offer, no real money, not affiliated with any operator."
   },
   "sports": {
     "sport": "football",
@@ -72,7 +68,7 @@
       "near": "Off the post and in!",
       "floor": "Keeper gets a hand — rebound, tucked away."
     },
-    "cta": { "label": "Claim your boost", "target": "#demo-complete" }
+    "cta": { "label": "Claim your boost", "target": "#rg-footer" }
   },
   "casino": {
     "ui": {
@@ -146,6 +142,6 @@
         "suffix": "% Cashback"
       }
     ],
-    "cta": { "label": "Claim my {format}", "target": "#demo-complete" }
+    "cta": { "label": "Claim my {format}", "target": "#rg-footer" }
   }
 }

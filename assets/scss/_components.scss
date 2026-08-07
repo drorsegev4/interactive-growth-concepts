@@ -330,18 +330,10 @@
   color: var(--text-muted);
 }
 
-.demo-notice {
-  margin-top: var(--space-4);
-  padding: var(--space-3);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: var(--fs-small);
-  text-align: left;
-}
-
-// Responsible gambling footer
+// Responsible gambling footer. This is the only place the demo is disclosed:
+// once, alongside 18+ and the RG link, which is where operators put compliance
+// copy. An in-flow panel repeating it sat directly on the CTA and undercut the
+// conversion moment the prototype exists to demonstrate.
 .rg-footer {
   content-visibility: auto;
   margin-top: var(--space-6);

@@ -53,11 +53,6 @@ function renderRgFooter() {
   `;
 }
 
-function demoNoticeHtml() {
-  const n = cfg.demoNotice;
-  return `<p class="demo-notice" id="demo-complete"><strong>${n.title}.</strong> ${n.body}</p>`;
-}
-
 function announce(message) {
   els.liveRegion.textContent = message;
 }
@@ -267,7 +262,6 @@ function renderClaim(prize, restored = false) {
           format ? interpolate(casino.cta.label, { format: format.label }) : ui.chooseToClaim
         }</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
-      ${demoNoticeHtml()}
     </div>
   `;
 

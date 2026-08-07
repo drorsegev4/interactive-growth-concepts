@@ -10,7 +10,19 @@ const config = JSON.parse(read('./config.json'));
 assert.equal(config.schemaVersion, 2, 'config schemaVersion must be 2');
 assert.equal(config.global.loadingDurationMs, 1500, 'interactive loading delay must be exactly 1.5 seconds');
 assert.ok(config.global.brandShort, 'brandShort must be config-driven');
-assert.ok(config.demoNotice?.title && config.demoNotice?.body, 'portfolio demo notice must be config-driven');
+// Disclosure is stated once, in the compliance footer where operators put it,
+// rather than in a panel at the CTA that undercuts the moment it sits on.
+assert.equal(config.demoNotice, undefined, 'the in-flow demo panel must be gone');
+assert.match(config.compliance.termsShort, /demo/i, 'the footer must disclose that this is a demo');
+assert.match(config.compliance.termsShort, /no real money/i, 'the footer must disclose that no real money is involved');
+assert.match(config.compliance.termsShort, /not affiliated/i, 'the footer must disclaim operator affiliation');
+
+// Both CTAs must still resolve to a real element rather than a dead anchor.
+for (const concept of ['sports', 'casino']) {
+  const target = config[concept].cta.target;
+  assert.match(target, /^#/, `${concept} CTA must anchor to an in-page target`);
+  assert.equal(target, '#rg-footer', `${concept} CTA must land on the compliance footer`);
+}
 
 const sportsUiKeys = [
   'loading', 'stepAimKicker', 'stepShootKicker', 'stepAim', 'aimHint', 'tapHint', 'skipShot',

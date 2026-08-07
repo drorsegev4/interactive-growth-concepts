@@ -99,11 +99,6 @@ function renderRgFooter() {
   `;
 }
 
-function demoNoticeHtml() {
-  const notice = cfg.demoNotice;
-  return `<p class="demo-notice" id="demo-complete"><strong>${notice.title}.</strong> ${notice.body}</p>`;
-}
-
 function announce(message) {
   els.liveRegion.textContent = message;
 }
@@ -326,7 +321,6 @@ function renderReveal(zone, grade, restored = false) {
       <p class="reveal__handoff">${interpolate(ui.handoffCopy, { boostedOdds: boostedOdds.toFixed(2) })}</p>
       <a class="cta" id="cta" href="${sports.cta.target}">${sports.cta.label}</a>
       <button class="secondary-btn start-over" type="button" data-action="start-over">${ui.startOver}</button>
-      ${demoNoticeHtml()}
     </div>
   `;
 
