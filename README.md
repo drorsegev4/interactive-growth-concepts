@@ -15,21 +15,17 @@ Portfolio prototype: no real money, no real offer, not affiliated with any opera
 
 ### Concept Selection & Market Context
 
-Reviewed 5 August 2026 across live product surfaces and Meta Ad Library creatives:
+Reviewed 5 to 8 August 2026 across live product surfaces, Meta Ad Library creatives, and by clicking through actual ads and promo pages on mobile:
 
-- **bet365 — Bet Builder.** Combine markets from one fixture and watch the price recalculate live. Real utility, but it assumes betting literacy and sits deep in the wagering journey, well past acquisition.
-- **DraftKings — Sportsbook.** Same Game Parlays, Pools, Free-to-Play Pools, daily Odds Boosts. Varied participation hooks, but the acquisition page still explains them as cards and copy rather than letting you try one.
-- **BetMGM — Casino.** Conventional welcome bundles alongside chance-led mechanics including a wheel and an arcade claw machine. Its bonus guide leaves users to compare deposit match, free spins and bonus credit unaided.
-- **DraftKings — Meta ads.** Creatives promising "Play $5, get 1000 Flex Spins" link straight to `itunes.apple.com`. A cold user must install a native app before touching anything the ad promised.
+- **bet365, Bet Builder.** Combine markets from one fixture and watch the price recalculate live. Real utility, but it assumes betting literacy and sits deep in the wagering journey, well past acquisition.
+- **bet365, "New Player Offer" pre-lander.** A real acquisition page: static banner, headline, terms, and a single "Join" button straight to the registration form. No interaction of any kind before that CTA.
+- **bet365, "Daily Prize Matcher."** A genuine interactive mechanic, three reveals a day on a game grid for cash, spins, or chips. But it lives inside the promotions section for existing accounts. Clicking "Play for Free" while logged out routes to the login form, not registration. The interaction and the acquisition page are two separate products that never meet.
+- **DraftKings, Sportsbook.** Same Game Parlays, Pools, Free-to-Play Pools, daily Odds Boosts. Varied participation hooks, but the acquisition page still explains them as cards and copy rather than letting you try one.
+- **BetMGM, Casino.** Conventional welcome bundles alongside chance-led mechanics including a wheel and an arcade claw machine. Its bonus guide leaves users to compare deposit match, free spins, and bonus credit unaided.
+- **BetMGM, Meta ads.** US creative leads with a dollar figure ("$1,500 Paid Back"); UK creative drops the cash headline for heritage and safety messaging ("50 years of Las Vegas heritage"). Same brand, same offer category, different trust lever by market. Both link straight to the app store.
+- **DraftKings, Meta ads.** Creatives promising "Play $5, get 1,000 Flex Spins" link straight to `itunes.apple.com`. A cold user must install a native app before touching anything the ad promised.
 
-What operators ship falls into two camps, and nothing I found does both at once:
-
-| Camp | Strength | Limitation |
-| --- | --- | --- |
-| **Utility-first customisation** — bet builders, same-game parlays | Real control, immediate price feedback | Built for users who already understand markets |
-| **Chance-led acquisition** — wheels, prize machines | Fast, legible reveal | The user's input rarely changes the offer in any explainable way |
-
-Both concepts sit in that gap: acquisition gamification with real utility underneath. The DraftKings ad funnel is the sharpest version of the problem — it places an app install between the promise and the payoff, where a mobile-web pre-lander lets a cold user *do* the advertised thing in the browser before being asked for anything.
+Every operator I checked either skips the pre-registration interaction entirely (DraftKings, BetMGM ads go straight to the app store) or keeps the interaction and the acquisition step apart, the way bet365 does with two separate pages that solve different problems for different users. Nobody puts a real mechanic in front of a cold, logged-out visitor before asking for anything. That is the gap both concepts sit in: a mobile-web pre-lander where the user does the advertised thing in the browser first, and the "Join" moment comes after they have already felt the value, not instead of it.
 
 ### Psychological & UX Rationale
 
