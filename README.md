@@ -15,7 +15,7 @@ Portfolio prototype: no real money, no real offer, not affiliated with any opera
 
 ### Concept Selection & Market Context
 
-Reviewed 5 to 8 August 2026 across live product surfaces, Meta Ad Library creatives, and by clicking through actual ads and promo pages on mobile:
+Reviewed across live product surfaces, Meta Ad Library creatives, and by clicking through actual ads and promo pages on mobile:
 
 **bet365**
 - **Bet Builder.** Combine markets from one fixture and watch the price recalculate live. Real utility, but it assumes betting literacy and sits deep in the wagering journey, well past acquisition.
@@ -31,32 +31,6 @@ Reviewed 5 to 8 August 2026 across live product surfaces, Meta Ad Library creati
 - **Meta ads.** US creative leads with a dollar figure ("$1,500 Paid Back"); UK creative drops the cash headline for heritage and safety messaging ("50 years of Las Vegas heritage"). Same brand, same offer category, different trust lever by market. Both link straight to the app store.
 
 Every operator I checked either skips the pre-registration interaction entirely (DraftKings and BetMGM ads go straight to the app store) or keeps the interaction and the acquisition step apart, the way bet365 does with two separate pages that solve different problems for different users. Nobody puts a real mechanic in front of a cold, logged-out visitor before asking for anything. That is the gap both concepts sit in: a mobile-web pre-lander where the user does the advertised thing in the browser first, and the "Join" moment comes after they have already felt the value, not instead of it.
-
-### Psychological & UX Rationale
-
-**Sports, "Take the Shot": agency and performed risk**
-
-- **Perceived control and effort justification.** The user times the shot, so the multiplier is theirs rather than assigned. People value outcomes they helped produce, and unlike a random reveal, this one is genuinely earned.
-- **Loss aversion, neutralised by design.** The mechanic is upside-only: the floor is visible *before* playing and guaranteed after, and *"Skip the shot, take the standard offer"* gives a zero-friction exit. There is no losing state to regret.
-- **Anchoring.** Showing the guaranteed floor first makes any boost read as a gain rather than a gamble.
-- **Concrete beats abstract.** The resolved line, `Arsenal to win, 2.10 → 7.35`, teaches what a boost does to a real price. "Up to ×3.5" never does.
-- **Fitts's Law.** The tap target is the entire goalmouth, not a small button, so the timing action stays reliable one-handed under time pressure.
-- **Closed feedback loop.** The ball flies to where the reticle actually stopped and the net reacts, so cause and effect are legible without explanation.
-
-**Casino, "Spin, Then Choose": familiarity, then flexibility**
-
-- **Jakob's Law.** A wheel is a universally understood pattern, so the learning cost is zero and attention goes to the offer rather than the interface.
-- **Curiosity gap, closed fast.** The spin opens a question and resolves it in 2.4 seconds. The outcome is genuinely uncertain across the whole prize set: a wheel whose result is already decided is animation, and users read that within one spin.
-- **Anchoring, again.** *"60 credits guaranteed. Spin to see how much more"* is stated before the spin, so the floor is a promise rather than a consolation.
-- **Endowment, then choice.** The user owns the win *before* being asked anything. Asking for a format first would mean asking a stranger to weigh "Deposit Match" against "Cashback" as abstract jargon; asking after the win turns the same three options into three concrete numbers, and the decision reads as spending winnings rather than filling in a form.
-- **Hick's Law.** Exactly three formats, not a menu: enough to feel like a real choice, few enough to decide instantly.
-
-**Shared UX principles**
-
-- **Message match.** Fixture, team, market and offer are all config-driven so the page can continue the exact promise of the creative that delivered the click.
-- **Progressive disclosure.** One decision per screen. Stacked on a single screen, the Casino wheel and its CTA fell below the fold on a typical handset.
-- **Peak-end rule.** The reveal is the peak and the handoff is the end, so both carry the value explicitly: the CTA names the chosen reward rather than saying "Continue".
-- **Cognitive fluency.** High-contrast focal points, single-tap mechanics, one accent colour reserved for the action, and no fine print competing inside the flow.
 
 ### Compliance as a design constraint
 
@@ -79,6 +53,10 @@ The metric that matters downstream is cost per FTD, not CTR: pre-landers reliabl
 - **The shootout.** Three markets, three timed shots, odds compounding as they land, mapping directly onto how an accumulator works. More commitment, so it belongs after the single shot proves it converts.
 - **Adaptive difficulty by segment.** Vary target band width by acquisition channel or player segment. `sweetZonePercent` already makes this a config change, but differential promotional value by segment needs compliance review before it ships, not after.
 - **Cross-product wallet.** Let a Sports boost convert into Casino spins across a unified balance, turning two pre-landers into one acquisition ecosystem.
+
+### Behavioral Principles Behind the Mechanics
+
+Sports leans on perceived control and loss aversion: the user times the shot rather than receiving a random boost, and the visible pre-play floor removes any downside, so the outcome reads as earned rather than gambled. Casino leans on Jakob's Law and a fast curiosity gap: a wheel needs no explanation, resolves in seconds, and the win is granted before the user is asked to choose a payout format, so the choice feels like spending a real prize rather than filling in a form. Both share message match to the ad that drove the click, one decision per screen, and a peak-end reveal where the CTA names the actual reward instead of a generic "Continue."
 
 ## Running locally
 
